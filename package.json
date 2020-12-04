@@ -11,9 +11,16 @@
     "path": "^0.12.7",
     "proskomma": "^0.1.24"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "tap-nyc": "^1.0.3",
+    "tap-summary": "^4.0.0",
+    "tape": "^5.0.1"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node_modules/tape/bin/tape test/code/*.js | node_modules/tap-summary/bin/cmd.js",
+    "rawTest": "node_modules/tape/bin/tape test/code/*.js",
+    "oneTest": "node_modules/tape/bin/tape test/code/$TESTSCRIPT.js",
+    "coverage": "node_modules/nyc/bin/nyc.js node_modules/tape/bin/tape test/code/*.js | node_modules/tap-nyc/bin/cmd.js"
   },
   "repository": {
     "type": "git",
