@@ -54,7 +54,9 @@ class ScriptureParaResultModel {
                         this.context.mainSequence = sequence;
                     }
                 }
+                this.context.sequenceStack = [];
                 this.renderSequenceId(renderSpec.sequence || this.context.mainSequence.id);
+                delete this.context.sequenceStack;
                 delete this.context.mainSequence;
                 delete this.context.sequences;
             }
@@ -66,25 +68,33 @@ class ScriptureParaResultModel {
 
     renderSequenceId(sequenceId) {
         const sequence = this.context.sequences[sequenceId];
-        this.context.sequence = {
+        this.context.sequenceStack.unshift({
             id: sequence.id,
             type: sequence.type,
-            openScopes: []
-        };
+            openScopes: [],
+            nBlocks: sequence.blocks.length
+        });
         this.renderStartSequence(sequence);
         this.renderBlocks(sequence.blocks);
         this.renderEndSequence(sequence);
-        delete this.context.sequence;
+        this.context.sequenceStack.shift();
     }
 
     renderBlocks(blocks) {
-        for (const block of blocks) {
+        for (const [n, block] of blocks.entries()) {
+            this.context.sequenceStack[0].block = {
+                blockScope: block.bs.label,
+                nBlockGrafts: block.bg.length,
+                nItems: block.items.length,
+                blockPos: n
+            };
             this.renderStartBlock(block);
             this.renderBlockGrafts(block.bg);
             this.renderStartItems(block.items);
             this.renderItems(block.items);
             this.renderEndItems(block.items);
             this.renderEndBlock(block);
+            delete this.context.sequenceStack[0].block;
         }
     }
 
@@ -95,8 +105,12 @@ class ScriptureParaResultModel {
     }
 
     renderItems(items) {
-        for (const item of items) {
+        for (const [n, item] of items.entries()) {
+            this.context.sequenceStack[0].item = {
+                itemPos: n
+            };
             this.renderItem(item);
+            delete this.context.sequenceStack[0].item;
         }
     }
 
