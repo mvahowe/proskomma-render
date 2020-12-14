@@ -3,6 +3,7 @@ const test = require('tape');
 const {pkWithDoc} = require('../lib/load');
 const doModelQuery = require('../../model_query');
 const ScriptureParaResultModel = require("../../scripture_para_result_model");
+const tokenActions = require("../../action_classes/token/consoleLog");
 
 const testGroup = "The Basics";
 
@@ -17,7 +18,7 @@ test(
             t.ok(result);
             const model = new ScriptureParaResultModel(result);
             t.ok(model);
-            model.render();
+            model.render({actions: {token: tokenActions}});
         } catch (err) {
             console.log(err)
         }

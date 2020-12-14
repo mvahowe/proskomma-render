@@ -4,18 +4,27 @@ class ScriptureParaResultModel {
         this.queryResult = result;
         this.context = {};
         this.classActions = {
-            renderStartSequence: [],
-            renderEndSequence: [],
-            renderStartBlock: [],
-            renderEndBlock: [],
-            renderBlockGraft: [],
-            renderStartItems: [],
-            renderEndItems: [],
-            renderToken: [],
-            renderScope: [],
-            renderInlineGraft: []
+            startSequence: [],
+            endSequence: [],
+            startBlock: [],
+            endBlock: [],
+            blockGraft: [],
+            startItems: [],
+            endItems: [],
+            token: [],
+            scope: [],
+            inlineGraft: []
         };
         this.allActions = {};
+    }
+
+    applyClassActions(classActions, data) {
+        for (const classAction of classActions) {
+            if (classAction.test(this.context, data)) {
+                classAction.action(this.context, data);
+                break;
+            }
+        }
     }
 
     render(renderSpec) {
@@ -129,27 +138,46 @@ class ScriptureParaResultModel {
         }
     };
 
-    renderStartSequence(sequence) {}
+    renderStartSequence(sequence) {
+        this.applyClassActions(this.allActions.startSequence, sequence);
+    }
 
-    renderEndSequence(sequence) {}
+    renderEndSequence(sequence) {
+        this.applyClassActions(this.allActions.endSequence, sequence);
+    }
 
-    renderStartBlock(block) {};
+    renderStartBlock(block) {
+        this.applyClassActions(this.allActions.startBlock, block);
+    };
 
-    renderEndBlock(block) {};
+    renderEndBlock(block) {
+        this.applyClassActions(this.allActions.endBlock, block);
+    };
 
-    renderBlockGraft(blockGraft) {};
+    renderBlockGraft(blockGraft) {
+        this.applyClassActions(this.allActions.blockGraft, blockGraft);
+    };
 
-    renderStartItems(items) {};
+    renderStartItems(items) {
+        this.applyClassActions(this.allActions.startItems, items);
+    };
 
-    renderEndItems(items) {};
+    renderEndItems(items) {
+        this.applyClassActions(this.allActions.endItems, items);
+    };
 
-    renderToken(token) {};
+    renderToken(token) {
+        this.applyClassActions(this.allActions.token, token);
+    };
 
-    renderScope(scope) {};
+    renderScope(scope) {
+        this.applyClassActions(this.allActions.scope, scope);
+    };
 
-    renderInlineGraft(graft) {};
+    renderInlineGraft(graft) {
+        this.applyClassActions(this.allActions.inlineGraft, graft);
+    };
 
 }
 
-module
-    .exports = ScriptureParaResultModel;
+module.exports = ScriptureParaResultModel;
