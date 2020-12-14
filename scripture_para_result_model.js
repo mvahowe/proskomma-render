@@ -21,7 +21,7 @@ class ScriptureParaResultModel {
     applyClassActions(classActions, data) {
         for (const classAction of classActions) {
             if (classAction.test(this.context, data)) {
-                classAction.action(this.context, data);
+                classAction.action(this, this.context, data);
                 break;
             }
         }
@@ -155,7 +155,11 @@ class ScriptureParaResultModel {
     };
 
     renderBlockGraft(blockGraft) {
+        this.context.sequenceStack[0].blockGraft = {
+            subType: blockGraft.subType
+        };
         this.applyClassActions(this.allActions.blockGraft, blockGraft);
+        delete this.context.sequenceStack[0].blockGraft;
     };
 
     renderStartItems(items) {

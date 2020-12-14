@@ -4,10 +4,32 @@ const {pkWithDoc} = require('../lib/load');
 const doModelQuery = require('../../model_query');
 const ScriptureParaResultModel = require("../../scripture_para_result_model");
 const tokenActions = require("../../action_classes/token/consoleLog");
+const blockGraftActions = require("../../action_classes/blockGraft/consoleLog");
+const endBlockActions = require("../../action_classes/endBlock/consoleLog");
+const scopeActions = require("../../action_classes/scope/chapterVerse");
 
 const testGroup = "The Basics";
 
 const pk = pkWithDoc("../test_data/rut.usfm", {lang: "eng", abbr: "web"})[0];
+// const pk2 = pkWithDoc("../../../../sbf/nfc/usx/040MAT.usx", {lang: "fra", abbr: "nfc"})[0];
+
+const renderHeading = {
+    test: (context, data) => {
+        return data.subType === "heading";
+    },
+    action: (renderer, context, data) => {
+        process.stdout.write(`\n++ `);
+        renderer.renderSequenceId(data.sequenceId);
+        process.stdout.write(` ++\n`);
+    }
+}
+
+const headingEndBlock = {
+    test: (context, data) => {
+        return (context.sequenceStack.length > 1) && (context.sequenceStack[1].blockGraft) && (context.sequenceStack[1].blockGraft.subType === "heading")
+    },
+    action: () => {}
+}
 
 test(
     `Build a Model (${testGroup})`,
@@ -18,7 +40,14 @@ test(
             t.ok(result);
             const model = new ScriptureParaResultModel(result);
             t.ok(model);
-            model.render({actions: {token: tokenActions}});
+            model.render({
+                actions: {
+                    token: tokenActions,
+                    blockGraft: [renderHeading, ...blockGraftActions],
+                    endBlock: [headingEndBlock, ...endBlockActions],
+                    scope: scopeActions
+                }
+            });
         } catch (err) {
             console.log(err)
         }
