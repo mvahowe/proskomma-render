@@ -4,7 +4,7 @@ module.exports = [
         test: (context, data) => {
             return true;
         },
-        action: (context, data) => {
+        action: (renderer, context, data) => {
             process.stdout.write(data.chars);
         }
     }

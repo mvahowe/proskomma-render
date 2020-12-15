@@ -80,7 +80,7 @@ class ScriptureParaResultModel {
         this.context.sequenceStack.unshift({
             id: sequence.id,
             type: sequence.type,
-            openScopes: [],
+            openScopes: new Set([]),
             nBlocks: sequence.blocks.length
         });
         this.renderStartSequence(sequence);
@@ -175,7 +175,13 @@ class ScriptureParaResultModel {
     };
 
     renderScope(scope) {
+        if (scope.itemType === "startScope") {
+            this.context.sequenceStack[0].openScopes.add(scope.label);
+        }
         this.applyClassActions(this.allActions.scope, scope);
+        if (scope.itemType === "endScope") {
+            this.context.sequenceStack[0].openScopes.delete(scope.label);
+        }
     };
 
     renderInlineGraft(graft) {
