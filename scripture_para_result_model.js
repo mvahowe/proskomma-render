@@ -81,7 +81,8 @@ class ScriptureParaResultModel {
             id: sequence.id,
             type: sequence.type,
             openScopes: new Set([]),
-            nBlocks: sequence.blocks.length
+            nBlocks: sequence.blocks.length,
+            renderStack: []
         });
         this.renderStartSequence(sequence);
         this.renderBlocks(sequence.blocks);
