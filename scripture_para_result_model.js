@@ -185,7 +185,11 @@ class ScriptureParaResultModel {
     };
 
     renderInlineGraft(graft) {
+        this.context.sequenceStack[0].inlineGraft = {
+            subType: graft.subType
+        };
         this.applyClassActions(this.allActions.inlineGraft, graft);
+        delete this.context.sequenceStack[0].inlineGraft;
     };
 
 }

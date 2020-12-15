@@ -5,13 +5,14 @@ const doModelQuery = require('../../model_query');
 const ScriptureParaResultModel = require("../../scripture_para_result_model");
 const tokenActions = require("../../action_classes/token/consoleLog");
 const blockGraftActions = require("../../action_classes/blockGraft/consoleLog");
+const inlineGraftActions = require("../../action_classes/inlineGraft/consoleLog");
 const endBlockActions = require("../../action_classes/endBlock/consoleLog");
 const scopeActions = require("../../action_classes/scope/chapterVerse");
 
 const testGroup = "The Basics";
 
 const pk = pkWithDoc("../test_data/rut.usfm", {lang: "eng", abbr: "web"})[0];
-// const pk2 = pkWithDoc("../../../../sbf/nfc/usx/040MAT.usx", {lang: "fra", abbr: "nfc"})[0];
+// const pk = pkWithDoc("../../../../sbf/nfc/usx/040MAT.usx", {lang: "fra", abbr: "nfc"})[0];
 
 const renderHeading = {
     test: (context, data) => {
@@ -44,6 +45,7 @@ test(
                 actions: {
                     token: tokenActions,
                     blockGraft: [renderHeading, ...blockGraftActions],
+                    inlineGraft: inlineGraftActions,
                     endBlock: [headingEndBlock, ...endBlockActions],
                     scope: scopeActions
                 }
