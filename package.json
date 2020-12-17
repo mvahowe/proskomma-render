@@ -4,7 +4,7 @@
   "description": "Utilities for rendering rich markup for Scripture from Proskomma",
   "main": "index.js",
   "directories": {
-    "test": "test"
+    "test": "src/test"
   },
   "dependencies": {
     "fs-extra": "^9.0.1",
@@ -17,10 +17,10 @@
     "tape": "^5.0.1"
   },
   "scripts": {
-    "test": "node_modules/tape/bin/tape test/code/*.js | node_modules/tap-summary/bin/cmd.js",
-    "rawTest": "node_modules/tape/bin/tape test/code/*.js",
-    "oneTest": "node_modules/tape/bin/tape test/code/$TESTSCRIPT.js",
-    "coverage": "node_modules/nyc/bin/nyc.js node_modules/tape/bin/tape test/code/*.js | node_modules/tap-nyc/bin/cmd.js"
+    "test": "node_modules/tape/bin/tape src/test/code/*.js | node_modules/tap-summary/bin/cmd.js",
+    "rawTest": "node_modules/tape/bin/tape src/test/code/*.js",
+    "oneTest": "node_modules/tape/bin/tape src/test/code/$TESTSCRIPT.js",
+    "coverage": "node_modules/nyc/bin/nyc.js node_modules/tape/bin/tape src/test/code/*.js | node_modules/tap-nyc/bin/cmd.js"
   },
   "repository": {
     "type": "git",
