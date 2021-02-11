@@ -12,7 +12,7 @@ const scopeActions = require("../../action_classes/scope/chapterVerse");
 const testGroup = "The Basics";
 
 // const pk = pkWithDoc("../test_data/rut.usfm", {lang: "eng", abbr: "web"})[0];
-const pk = pkWithDoc("../../../../../sbf/nfc/usx/040MAT.usx", {lang: "fra", abbr: "nfc"})[0];
+const pk = pkWithDoc("../../../../../sbf/nfc/usx/001GEN.usx", {lang: "fra", abbr: "nfc"})[0];
 
 const renderHeading = {
     test: (context, data) => {

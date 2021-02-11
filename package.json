@@ -1,6 +1,6 @@
 {
   "name": "proskomma-render",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Utilities for rendering rich markup for Scripture from Proskomma",
   "main": "index.js",
   "directories": {
@@ -9,7 +9,7 @@
   "dependencies": {
     "fs-extra": "^9.0.1",
     "path": "^0.12.7",
-    "proskomma": "^0.1.26"
+    "proskomma": "^0.3.0"
   },
   "devDependencies": {
     "tap-nyc": "^1.0.3",
@@ -27,7 +27,7 @@
     "url": "git+https://github.com/mvahowe/proskomma-render.git"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/mvahowe/proskomma-render/issues"
   },
