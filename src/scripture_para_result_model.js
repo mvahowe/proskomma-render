@@ -13,7 +13,9 @@ class ScriptureParaResultModel {
             endItems: [],
             token: [],
             scope: [],
-            inlineGraft: []
+            inlineGraft: [],
+            startStackRow: [],
+            endStackRow: [],
         };
         this.allActions = {};
     }
@@ -82,7 +84,7 @@ class ScriptureParaResultModel {
             type: sequence.type,
             openScopes: new Set([]),
             nBlocks: sequence.blocks.length,
-            renderStack: []
+            renderStack: [[]]
         });
         this.renderStartSequence(sequence);
         this.renderBlocks(sequence.blocks);
@@ -144,6 +146,9 @@ class ScriptureParaResultModel {
     }
 
     renderEndSequence(sequence) {
+        while (this.nStackRows() > 0) {
+            this.popStackRow();
+        }
         this.applyClassActions(this.allActions.endSequence, sequence);
     }
 
@@ -192,6 +197,28 @@ class ScriptureParaResultModel {
         this.applyClassActions(this.allActions.inlineGraft, graft);
         delete this.context.sequenceStack[0].inlineGraft;
     };
+
+    appendToTopStackRow(item) {
+        this.context.sequenceStack[0].renderStack[0].push(item);
+    }
+
+    nStackRows() {
+        return this.context.sequenceStack[0].renderStack.length;
+    }
+
+    topStackRow() {
+        return this.context.sequenceStack[0].renderStack[0];
+    }
+
+    pushStackRow() {
+        this.applyClassActions(this.allActions.startStackRow, this.topStackRow);
+        this.context.sequenceStack[0].renderStack.unshift([]);
+    }
+
+    popStackRow() {
+        this.applyClassActions(this.allActions.endStackRow, this.topStackRow);
+        this.context.sequenceStack[0].renderStack.shift();
+    }
 
 }
 
