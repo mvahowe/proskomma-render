@@ -16,8 +16,10 @@ class XhtmlResultModel extends ScriptureParaResultModel {
             "h3 {font-size: large}\n",
             ".chapter {font-size: xx-large; padding-right: 0.25em; float: left}\n",
             ".verses {font-size: small; font-weight: bold}\n",
-            ".p {padding-bottom: 0.2em; padding-top: 0.2em}\n",
-            ".q, .q1 {padding-left: 1.5em}\n",
+            ".p, .m {margin-bottom: 0.4em; margin-top: 0.4em}\n",
+            ".q, .q1, .pi {padding-left: 1.5em}\n",
+            ".q2 {padding-left: 2.5em}\n",
+            ".q3 {padding-left: 3.5em}\n",
             "* {font-size: medium}",
             "</style>\n"
         ];
@@ -85,7 +87,7 @@ class XhtmlResultModel extends ScriptureParaResultModel {
         this.classActions.token = [
             {
                 test: context => true,
-                action: (renderer, context, data) => renderer.appendToTopStackRow(data.subType === "lineSpace" ? " ": data.chars),
+                action: (renderer, context, data) => renderer.appendToTopStackRow(["lineSpace", "eol"].includes(data.subType) ? " ": data.chars),
             }
         ];
         this.classActions.endSequence = [
