@@ -4,6 +4,10 @@ class ScriptureParaResultModel {
         this.queryResult = result;
         this.context = {};
         this.classActions = {
+            startDocSet: [],
+            endDocSet: [],
+            startDocument: [],
+            endDocument: [],
             startSequence: [],
             endSequence: [],
             startBlock: [],
@@ -46,6 +50,7 @@ class ScriptureParaResultModel {
             for (const selector of docSet.selectors) {
                 this.context.docSet.selectors[selector.key] = selector.value;
             }
+            this.renderStartDocSet(docSet);
             for (const document of docSet.documents) {
                 if (renderSpec.document && renderSpec.document !== document.id) {
                     continue;
@@ -58,6 +63,7 @@ class ScriptureParaResultModel {
                 for (const header of document.headers) {
                     this.context.document.headers[header.key] = header.value;
                 }
+                this.renderStartDocument(document);
                 this.context.sequences = {};
                 for (const sequence of document.sequences) {
                     this.context.sequences[sequence.id] = sequence;
@@ -70,10 +76,12 @@ class ScriptureParaResultModel {
                 delete this.context.sequenceStack;
                 delete this.context.mainSequence;
                 delete this.context.sequences;
+                this.renderEndDocument(document);
+                delete this.context.document;
             }
-            delete this.context.document;
+            this.renderEndDocSet(docSet);
+            delete this.context.docSet;
         }
-        delete this.context.docSet;
         this.allActions = {};
     }
 
@@ -140,6 +148,22 @@ class ScriptureParaResultModel {
                 break;
         }
     };
+
+    renderStartDocSet(docSet) {
+        this.applyClassActions(this.allActions.startDocSet, docSet);
+    }
+
+    renderStartDocument(document) {
+        this.applyClassActions(this.allActions.startDocument, document);
+    }
+
+    renderEndDocSet(docSet) {
+        this.applyClassActions(this.allActions.endDocSet, docSet);
+    }
+
+    renderEndDocument(document) {
+        this.applyClassActions(this.allActions.endDocument, document);
+    }
 
     renderStartSequence(sequence) {
         this.applyClassActions(this.allActions.startSequence, sequence);

@@ -4,26 +4,41 @@ class XhtmlResultModel extends ScriptureParaResultModel {
 
     constructor(result) {
         super(result);
-        this.head = [
-            "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/>\n",
-            "<style type=\"text/css\">\n",
-            ".mt, .mt2 {text-align: center}\n",
-            ".mt {font-size: xx-large; font-weight: bold}\n",
-            ".mt2 {font-size: x-large}\n",
-            "h1, h2, h3 {margin-top: O.5em; margin-bottom: 0.2em}\n",
-            "h1 {font-size: xx-large}\n",
-            "h2 {font-size: x-large}\n",
-            "h3 {font-size: large}\n",
-            ".chapter {font-size: xx-large; padding-right: 0.25em; float: left}\n",
-            ".verses {font-size: small; font-weight: bold}\n",
-            ".p, .m {margin-bottom: 0.4em; margin-top: 0.4em}\n",
-            ".q, .q1, .pi {padding-left: 1.5em}\n",
-            ".q2 {padding-left: 2.5em}\n",
-            ".q3 {padding-left: 3.5em}\n",
-            "* {font-size: medium}",
-            "</style>\n"
-        ];
+        this.head = [];
         this.body = [];
+        this.footnotes = {};
+        this.nextFootnote = 1;
+        this.classActions.startDocument = [
+            {
+                test: () => true,
+                action: () => {
+                    this.head = [
+                        "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/>\n",
+                        "<style type=\"text/css\">\n",
+                        ".mt, .mt2 {text-align: center}\n",
+                        ".mt {font-size: xx-large; font-weight: bold}\n",
+                        ".mt2 {font-size: x-large}\n",
+                        "h1, h2, h3 {margin-top: O.5em; margin-bottom: 0.2em}\n",
+                        "h1 {font-size: xx-large}\n",
+                        "h2 {font-size: x-large}\n",
+                        "h3 {font-size: large}\n",
+                        ".chapter {font-size: xx-large; padding-right: 0.25em; float: left}\n",
+                        ".verses {font-size: small; font-weight: bold}\n",
+                        ".p, .m {margin-bottom: 0.4em; margin-top: 0.4em}\n",
+                        ".q, .q1, .pi {padding-left: 1.5em}\n",
+                        ".q2 {padding-left: 2.5em}\n",
+                        ".q3 {padding-left: 3.5em}\n",
+                        ".footnote_anchor {font-size: small; font-family: italic; vertical-align: top}\n",
+                        ".footnote_number {font-size: large; font-weight: bold}\n",
+                        "* {font-size: medium}",
+                        "</style>\n"
+                    ];
+                    this.body = [];
+                    this.footnotes = {};
+                    this.nextFootnote = 1;
+                },
+            },
+        ];
         this.classActions.startSequence = [
             {
                 test: context => context.sequenceStack[0].type === "main",
@@ -62,6 +77,16 @@ class XhtmlResultModel extends ScriptureParaResultModel {
                 },
             },
             {
+                test: context => context.sequenceStack[0].type === "footnote",
+                action: (renderer, context, data) => {
+                    const footnoteKey = renderer.nextFootnote.toString();
+                    if (!(footnoteKey in this.footnotes)) {
+                        this.footnotes[footnoteKey] = [];
+                    }
+                    this.footnotes[footnoteKey] = this.footnotes[footnoteKey].concat(renderer.topStackRow());
+                },
+            },
+            {
                 test: context => context.sequenceStack[0].type === "main",
                 action: (renderer, context, data) => {
                     const htmlClass = data.bs.label.split("/")[1];
@@ -86,14 +111,33 @@ class XhtmlResultModel extends ScriptureParaResultModel {
         ];
         this.classActions.token = [
             {
-                test: context => true,
-                action: (renderer, context, data) => renderer.appendToTopStackRow(["lineSpace", "eol"].includes(data.subType) ? " ": data.chars),
+                test: () => true,
+                action: (renderer, context, data) => renderer.appendToTopStackRow(["lineSpace", "eol"].includes(data.subType) ? " " : data.chars),
+            }
+        ];
+        this.classActions.inlineGraft = [
+            {
+                test: (context, data) => data.subType === "footnote",
+                action: (renderer, context, data) => {
+                    renderer.appendToTopStackRow(`<a id="footnote_anchor_${renderer.nextFootnote}" href="#footnote_${renderer.nextFootnote}" class="footnote_anchor">${renderer.nextFootnote}</a>`);
+                    renderer.renderSequenceId(data.sequenceId);
+                    renderer.nextFootnote++;
+                },
             }
         ];
         this.classActions.endSequence = [
             {
                 test: context => context.sequenceStack[0].type === "main",
-                action: renderer => console.log(`<html>\n<head>\n${renderer.head.join("")}\n</head>\n<body>\n${renderer.body.join("")}</body>\n</html>\n`),
+                action: renderer => {
+                    console.log(`<html>\n<head>\n${renderer.head.join("")}\n</head>\n`);
+                    console.log("<body>\n");
+                    console.log(renderer.body.join(""));
+                    console.log("<h3>Notes</h3>\n");
+                    for (const [footnoteNo, footnoteContent] of Object.entries(renderer.footnotes)) {
+                        console.log(`<div><a id="footnote_${footnoteNo}" href="#footnote_anchor_${footnoteNo}" class="footnote_number">${footnoteNo}</a>&nbsp;: ${footnoteContent.join("")}</div>\n`);
+                    }
+                    console.log("</body>\n</html>\n");
+                }
             }
         ];
     }

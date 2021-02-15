@@ -5,16 +5,33 @@ const {ProsKomma} = require('proskomma');
 const doModelQuery = require('../model_query');
 const renderModel = require('../xhtmlResultModel');
 
-const fp = process.argv[2];
-const content = fse.readFileSync(path.resolve(__dirname, fp));
-const contentType = fp.split('.').pop();
+const books = ["2JN"];
+
+const bookMatches = str => {
+    for (const book of books) {
+        if (str.includes(book) || str.includes(book.toLowerCase())) {
+            return true;
+        }
+    }
+    return false;
+}
+
+const dp = process.argv[2];
+const fqdp = path.resolve(__dirname, dp);
 const pk = new ProsKomma();
-pk.importDocument(
-    {lang: "xxx", abbr: "yyy"},
-    contentType,
-    content,
-    {}
-);
+for (const filePath of fse.readdirSync(fqdp)) {
+    if (bookMatches(filePath)) {
+        const content = fse.readFileSync(path.join(fqdp, filePath));
+        const contentType = filePath.split('.').pop();
+        pk.importDocument(
+            {lang: "xxx", abbr: "yyy"},
+            contentType,
+            content,
+            {}
+        );
+    }
+}
+
 
 const doRender = async pk => {
     await doModelQuery(pk)
@@ -25,4 +42,6 @@ const doRender = async pk => {
         )
 };
 
-doRender(pk).then(() => {console.log()});
+doRender(pk).then(() => {
+    console.log()
+});
