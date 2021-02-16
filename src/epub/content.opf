@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="3.0" xml:lang = "en" dir="ltr">
+    <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+        <dc:title id="title">%title%</dc:title>
+        <dc:creator>Proskomma ePub Generator</dc:creator>
+        <dc:identifier id="uid">%uid%</dc:identifier>
+        <dc:language>%language%</dc:language>
+        <meta property="dcterms:modified">%timestamp%</meta>
+    </metadata>
+    <manifest>
+        <item id="css" href="OEBPS/CSS/styles.css" media-type="text/css" />
+        <item id="body_2JN" href="OEBPS/XHTML/2JN/2JN.html" media-type="application/xhtml+xml" />
+    </manifest>
+    <spine>
+        <itemref idref="body_2JN" />
+    </spine>
+</package>

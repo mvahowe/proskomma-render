@@ -2,6 +2,7 @@
 
 const fse = require('fs-extra');
 const path = require('path');
+const JSZip = require('jszip');
 
 const {ProsKomma} = require('proskomma');
 const doModelQuery = require('../model_query');
@@ -38,9 +39,13 @@ for (const book of config.books) {
     fse.ensureDirSync(path.join(config.epubDir, "OEBPS", "XHTML", book));
 }
 fse.ensureDirSync(path.join(config.epubDir, "OEBPS", "CSS"));
+
+// Copy standard files
 fse.writeFileSync(path.join(config.epubDir, "mimetype"), "application/epub+zip");
 const css = fse.readFileSync(path.resolve(__dirname, 'styles.css'));
 fse.writeFileSync(path.join(config.epubDir, "OEBPS", "CSS", "styles.css"), css);
+const container = fse.readFileSync(path.resolve(__dirname, 'container.xml'));
+fse.writeFileSync(path.join(config.epubDir, "META-INF", "container.xml"), container);
 
 // Load books
 const pk = new ProsKomma();
@@ -61,3 +66,14 @@ for (const filePath of fse.readdirSync(config.sourceDir)) {
 doRender(pk, config).then(() => {
     console.log()
 });
+
+// Build OPF file
+let opf = fse.readFileSync(path.resolve(__dirname, 'content.opf'), 'utf8');
+opf = opf.replace(/%title%/g, config.title);
+opf = opf.replace(/%uid%/g, config.uid);
+opf = opf.replace(/%language%/g, config.language);
+opf = opf.replace(/%timestamp%/g, new Date().toISOString());
+fse.writeFileSync(path.join(config.epubDir, "OEBPS", "content.opf"), opf);
+
+// Zip up epub
+const zip = new JSZip();
