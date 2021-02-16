@@ -1,0 +1,16 @@
+.mt, .mt2 {text-align: center}
+.mt {font-size: xx-large; font-weight: bold}
+.mt2 {font-size: x-large}
+h1, h2, h3 {margin-top: O.5em; margin-bottom: 0.2em}
+h1 {font-size: xx-large}
+h2 {font-size: x-large}
+h3 {font-size: large}
+.chapter {font-size: xx-large; padding-right: 0.25em; float: left}
+.verses {font-size: small; font-weight: bold}
+.p, .m {margin-bottom: 0.4em; margin-top: 0.4em}
+.q, .q1, .pi {padding-left: 1.5em}
+.q2 {padding-left: 2.5em}
+.q3 {padding-left: 3.5em}
+.footnote_anchor {font-size: small; font-family: italic; vertical-align: top}
+.footnote_number {font-size: large; font-weight: bold}
+* {font-size: medium}

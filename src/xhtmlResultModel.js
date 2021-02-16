@@ -17,25 +17,8 @@ class XhtmlResultModel extends ScriptureParaResultModel {
                 test: () => true,
                 action: () => {
                     this.head = [
-                        "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/>\n",
-                        "<style type=\"text/css\">\n",
-                        ".mt, .mt2 {text-align: center}\n",
-                        ".mt {font-size: xx-large; font-weight: bold}\n",
-                        ".mt2 {font-size: x-large}\n",
-                        "h1, h2, h3 {margin-top: O.5em; margin-bottom: 0.2em}\n",
-                        "h1 {font-size: xx-large}\n",
-                        "h2 {font-size: x-large}\n",
-                        "h3 {font-size: large}\n",
-                        ".chapter {font-size: xx-large; padding-right: 0.25em; float: left}\n",
-                        ".verses {font-size: small; font-weight: bold}\n",
-                        ".p, .m {margin-bottom: 0.4em; margin-top: 0.4em}\n",
-                        ".q, .q1, .pi {padding-left: 1.5em}\n",
-                        ".q2 {padding-left: 2.5em}\n",
-                        ".q3 {padding-left: 3.5em}\n",
-                        ".footnote_anchor {font-size: small; font-family: italic; vertical-align: top}\n",
-                        ".footnote_number {font-size: large; font-weight: bold}\n",
-                        "* {font-size: medium}",
-                        "</style>\n"
+                        '<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/>\n',
+                        '<link type="text/css" rel="stylesheet" href="../../CSS/styles.css" />\n',
                     ];
                     this.body = [];
                     this.footnotes = {};

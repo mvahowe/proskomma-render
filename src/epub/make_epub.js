@@ -39,6 +39,8 @@ for (const book of config.books) {
 }
 fse.ensureDirSync(path.join(config.epubDir, "OEBPS", "CSS"));
 fse.writeFileSync(path.join(config.epubDir, "mimetype"), "application/epub+zip");
+const css = fse.readFileSync(path.resolve(__dirname, 'styles.css'));
+fse.writeFileSync(path.join(config.epubDir, "OEBPS", "CSS", "styles.css"), css);
 
 // Load books
 const pk = new ProsKomma();
