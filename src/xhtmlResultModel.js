@@ -1,6 +1,3 @@
-const fse = require('fs-extra');
-const path = require('path');
-
 const ScriptureParaResultModel = require('./scripture_para_result_model');
 
 class XhtmlResultModel extends ScriptureParaResultModel {
@@ -92,7 +89,7 @@ class XhtmlResultModel extends ScriptureParaResultModel {
             {
                 test: (context, data) => data.itemType === "startScope" && data.label.startsWith("verses/") && !(data.label.endsWith("/1")),
                 action: (renderer, context, data) => {
-                    renderer.appendToTopStackRow(`<span class="verses">${data.label.split("/")[1]}</span>&nbsp;`);
+                    renderer.appendToTopStackRow(`<span class="verses">${data.label.split("/")[1]}</span>&#160;`);
                 },
             },
         ];
@@ -116,21 +113,21 @@ class XhtmlResultModel extends ScriptureParaResultModel {
             {
                 test: context => context.sequenceStack[0].type === "main",
                 action: (renderer, context) => {
-
-                    fse.writeFileSync(
-                        path.join(this.config.epubDir, "OEBPS", "XHTML", context.document.headers.bookCode, `${context.document.headers.bookCode}.html`),
-                        [
-                            `<html>\n<head>\n${renderer.head.join("")}\n</head>\n`,
-                            '<body>\n',
-                            renderer.body.join(""),
-                            '<h3>Notes</h3>\n',
-                            Object.entries(renderer.footnotes)
-                                .map(fe =>
-                                    `<div><a id="footnote_${fe[0]}" href="#footnote_anchor_${fe[0]}" class="footnote_number">${fe[0]}</a>&nbsp;: ${fe[1].join("")}</div>\n`)
-                                .join(""),
-                            '</body>\n</html>\n'
-                        ].join("")
-                    )
+                    renderer.config.zip
+                        .file(
+                            `OEBPS/XHTML/2JN/${context.document.headers.bookCode}.xhtml`,
+                            [
+                                `<html xmlns="http://www.w3.org/1999/xhtml">\n<head>\n${renderer.head.join("")}\n</head>\n`,
+                                '<body>\n',
+                                renderer.body.join(""),
+                                '<h3>Notes</h3>\n',
+                                Object.entries(renderer.footnotes)
+                                    .map(fe =>
+                                        `<div><a id="footnote_${fe[0]}" href="#footnote_anchor_${fe[0]}" class="footnote_number">${fe[0]}</a>&#160;: ${fe[1].join("")}</div>\n`)
+                                    .join(""),
+                                '</body>\n</html>\n'
+                            ].join("")
+                        );
                 }
             }
         ];

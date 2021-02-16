@@ -1,4 +1,4 @@
-// make_epub config.json
+// node make_epub.js config.json out.epub
 
 const fse = require('fs-extra');
 const path = require('path');
@@ -26,26 +26,27 @@ const doRender = async (pk, config) => {
         )
 };
 
-// Read config file
+const zip = new JSZip();
+
+// Read and customize config file
 const configPath = path.resolve(__dirname, process.argv[2]);
 const config = fse.readJsonSync(configPath);
 config.sourceDir = path.resolve(__dirname, config.sourceDir);
-config.epubDir = path.resolve(__dirname, config.epubDir);
 
-// Set up epub directory structure
-fse.ensureDirSync(path.join(config.epubDir, "META-INF"));
-fse.ensureDirSync(path.join(config.epubDir, "OEBPS", "XHTML"));
-for (const book of config.books) {
-    fse.ensureDirSync(path.join(config.epubDir, "OEBPS", "XHTML", book));
+// Get output path
+const outputPath = process.argv[3];
+if (!outputPath) {
+    throw new Error("USAGE: node make_epub.js config.json out.epub");
 }
-fse.ensureDirSync(path.join(config.epubDir, "OEBPS", "CSS"));
 
-// Copy standard files
-fse.writeFileSync(path.join(config.epubDir, "mimetype"), "application/epub+zip");
-const css = fse.readFileSync(path.resolve(__dirname, 'styles.css'));
-fse.writeFileSync(path.join(config.epubDir, "OEBPS", "CSS", "styles.css"), css);
-const container = fse.readFileSync(path.resolve(__dirname, 'container.xml'));
-fse.writeFileSync(path.join(config.epubDir, "META-INF", "container.xml"), container);
+// Set up directories and standard files in zip
+zip.file("mimetype", "application/epub+zip");
+const metaDir = zip.folder("META-INF");
+metaDir.file("container.xml", fse.readFileSync(path.resolve(__dirname, 'container.xml')));
+const oebpsDir = zip.folder("OEBPS");
+const cssDir = oebpsDir.folder("CSS");
+cssDir.file("styles.css", fse.readFileSync(path.resolve(__dirname, 'styles.css')));
+config.zip = zip;
 
 // Load books
 const pk = new ProsKomma();
@@ -64,16 +65,17 @@ for (const filePath of fse.readdirSync(config.sourceDir)) {
 
 // Do query and rendering
 doRender(pk, config).then(() => {
-    console.log()
+    // Build OPF file
+    let opf = fse.readFileSync(path.resolve(__dirname, 'content.opf'), 'utf8');
+    opf = opf.replace(/%title%/g, config.title);
+    opf = opf.replace(/%uid%/g, config.uid);
+    opf = opf.replace(/%language%/g, config.language);
+    opf = opf.replace(/%timestamp%/g, new Date().toISOString().replace(/\.\d+Z/g, "Z"));
+    oebpsDir.file("content.opf", opf);
+    const toc = fse.readFileSync(path.resolve(__dirname, 'toc.xhtml'), 'utf8');
+    oebpsDir.file("XHTML/toc.xhtml", toc);
+// Write out zip
+    zip.generateNodeStream({type: "nodebuffer", streamFiles: true})
+        .pipe(fse.createWriteStream(outputPath))
+        .on('finish', function() {console.log("done")});
 });
-
-// Build OPF file
-let opf = fse.readFileSync(path.resolve(__dirname, 'content.opf'), 'utf8');
-opf = opf.replace(/%title%/g, config.title);
-opf = opf.replace(/%uid%/g, config.uid);
-opf = opf.replace(/%language%/g, config.language);
-opf = opf.replace(/%timestamp%/g, new Date().toISOString());
-fse.writeFileSync(path.join(config.epubDir, "OEBPS", "content.opf"), opf);
-
-// Zip up epub
-const zip = new JSZip();
