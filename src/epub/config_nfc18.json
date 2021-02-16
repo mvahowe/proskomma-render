@@ -3,5 +3,5 @@
   "title": "La Nouvelle Bible Français Courant",
   "language": "fr",
   "uid": "NFC18",
-  "books": ["2JN"]
+  "books": ["1JN", "2JN", "3JN"]
 }

@@ -8,11 +8,12 @@
         <meta property="dcterms:modified">%timestamp%</meta>
     </metadata>
     <manifest>
-        <item id="contents" href="../OEBPS/XHTML/toc.xhtml" media-type="application/xhtml+xml" properties="nav"/>
+        <item id="toc" href="../OEBPS/XHTML/toc.xhtml" media-type="application/xhtml+xml" properties="nav"/>
         <item id="css" href="../OEBPS/CSS/styles.css" media-type="text/css" />
-        <item id="body_2JN" href="../OEBPS/XHTML/2JN/2JN.xhtml" media-type="application/xhtml+xml" />
+        %book_manifest_items%
     </manifest>
     <spine>
-        <itemref idref="body_2JN" />
+        <itemref idref="toc" />
+        %spine%
     </spine>
 </package>

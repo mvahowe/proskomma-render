@@ -115,7 +115,7 @@ class XhtmlResultModel extends ScriptureParaResultModel {
                 action: (renderer, context) => {
                     renderer.config.zip
                         .file(
-                            `OEBPS/XHTML/2JN/${context.document.headers.bookCode}.xhtml`,
+                            `OEBPS/XHTML/${context.document.headers.bookCode}/${context.document.headers.bookCode}.xhtml`,
                             [
                                 `<html xmlns="http://www.w3.org/1999/xhtml">\n<head>\n${renderer.head.join("")}\n</head>\n`,
                                 '<body>\n',

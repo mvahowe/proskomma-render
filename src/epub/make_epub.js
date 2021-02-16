@@ -1,4 +1,4 @@
-// node make_epub.js config.json out.epub
+// node make_epub.js config_nfc18.json out.epub
 
 const fse = require('fs-extra');
 const path = require('path');
@@ -36,7 +36,7 @@ config.sourceDir = path.resolve(__dirname, config.sourceDir);
 // Get output path
 const outputPath = process.argv[3];
 if (!outputPath) {
-    throw new Error("USAGE: node make_epub.js config.json out.epub");
+    throw new Error("USAGE: node make_epub.js config_nfc18.json out.epub");
 }
 
 // Set up directories and standard files in zip
@@ -71,8 +71,11 @@ doRender(pk, config).then(() => {
     opf = opf.replace(/%uid%/g, config.uid);
     opf = opf.replace(/%language%/g, config.language);
     opf = opf.replace(/%timestamp%/g, new Date().toISOString().replace(/\.\d+Z/g, "Z"));
+    opf = opf.replace(/%spine%/g, config.books.map(b => `<itemref idref="body_${b}" />\n`).join(""));
+    opf = opf.replace(/%book_manifest_items%/g, config.books.map(b => `<item id="body_${b}" href="../OEBPS/XHTML/${b}/${b}.xhtml" media-type="application/xhtml+xml" />`).join(""));
     oebpsDir.file("content.opf", opf);
-    const toc = fse.readFileSync(path.resolve(__dirname, 'toc.xhtml'), 'utf8');
+    let toc = fse.readFileSync(path.resolve(__dirname, 'toc.xhtml'), 'utf8');
+    toc = toc.replace(/%contentLinks%/g, config.books.map(b => `<li><a href="${b}/${b}.xhtml">${b}</a></li>\n`).join(""));
     oebpsDir.file("XHTML/toc.xhtml", toc);
 // Write out zip
     zip.generateNodeStream({type: "nodebuffer", streamFiles: true})
