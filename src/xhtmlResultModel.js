@@ -14,14 +14,17 @@ class XhtmlResultModel extends ScriptureParaResultModel {
         this.footnotes = {};
         this.nextFootnote = 1;
         this.zip = null;
+        this.bookTitles = {};
         this.classActions.startDocSet = [
             {
                 test: () => true,
                 action: (renderer) => {
+                    renderer.bookTitles = {};
                     renderer.zip = new JSZip();
                     renderer.zip.file("mimetype", "application/epub+zip");
                     renderer.zip.file("META-INF/container.xml", fse.readFileSync(path.resolve(this.config.configRoot, 'container.xml')));
                     renderer.zip.file("OEBPS/CSS/styles.css", fse.readFileSync(path.resolve(this.config.configRoot, 'styles.css')));
+                    renderer.zip.file("OEBPS/IMG/cover.png", fse.readFileSync(path.resolve(this.config.configRoot, 'cover.png')));
 
                 },
             },
@@ -29,7 +32,7 @@ class XhtmlResultModel extends ScriptureParaResultModel {
         this.classActions.startDocument = [
             {
                 test: () => true,
-                action: () => {
+                action: (renderer, context) => {
                     this.head = [
                         '<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/>\n',
                         '<link type="text/css" rel="stylesheet" href="../../CSS/styles.css" />\n',
@@ -37,6 +40,12 @@ class XhtmlResultModel extends ScriptureParaResultModel {
                     this.body = [];
                     this.footnotes = {};
                     this.nextFootnote = 1;
+                    this.bookTitles[context.document.headers.bookCode] = [
+                        context.document.headers.h,
+                        context.document.headers.toc,
+                        context.document.headers.toc2,
+                        context.document.headers.toc3,
+                        ]
                 },
             },
         ];
@@ -176,8 +185,12 @@ class XhtmlResultModel extends ScriptureParaResultModel {
                     opf = opf.replace(/%spine%/g, renderer.config.books.map(b => `<itemref idref="body_${b}" />\n`).join(""));
                     opf = opf.replace(/%book_manifest_items%/g, renderer.config.books.map(b => `<item id="body_${b}" href="../OEBPS/XHTML/${b}/${b}.xhtml" media-type="application/xhtml+xml" />`).join(""));
                     renderer.zip.file("OEBPS/content.opf", opf);
+                    let title = fse.readFileSync(path.resolve(renderer.config.configRoot, 'title.xhtml'), 'utf8');
+                    title = title.replace(/%titlePage%/g, config.i18n.titlePage);
+                    title = title.replace(/%copyright%/g, config.i18n.copyright);
+                    renderer.zip.file("OEBPS/XHTML/title.xhtml", title);
                     let toc = fse.readFileSync(path.resolve(renderer.config.configRoot, 'toc.xhtml'), 'utf8');
-                    toc = toc.replace(/%contentLinks%/g, config.books.map(b => `<li><a href="${b}/${b}.xhtml">${b}</a></li>\n`).join(""));
+                    toc = toc.replace(/%contentLinks%/g, config.books.map(b => `<li><a href="${b}/${b}.xhtml">${renderer.bookTitles[b][2]}</a></li>\n`).join(""));
                     toc = toc.replace(/%toc_books%/g, config.i18n.tocBooks)
                     renderer.zip.file("OEBPS/XHTML/toc.xhtml", toc);
                     // Write out zip

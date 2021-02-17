@@ -3,9 +3,11 @@
   "title": "La Nouvelle Bible Français Courant",
   "language": "fr",
   "uid": "NFC18",
-  "books": ["1JN", "2JN", "3JN"],
+  "books": ["MRK", "1JN", "2JN", "3JN", "JUD"],
   "i18n": {
     "notes": "Notes de pied de page",
-    "tocBooks": "Table des matières"
+    "tocBooks": "Table des matières",
+    "titlePage": "La Nouvelle Français courant 2019",
+    "copyright": "© Société biblique française – Bibli'0, 2019"
   }
 }
