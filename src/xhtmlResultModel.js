@@ -48,7 +48,7 @@ class XhtmlResultModel extends ScriptureParaResultModel {
         ];
         this.classActions.blockGraft = [
             {
-                test: context => ["title", "heading"].includes(context.sequenceStack[0].blockGraft.subType),
+                test: context => ["title", "heading", "introduction"].includes(context.sequenceStack[0].blockGraft.subType),
                 action: (renderer, context, data) => {
                     renderer.renderSequenceId(data.sequenceId);
                 }
@@ -64,16 +64,26 @@ class XhtmlResultModel extends ScriptureParaResultModel {
             {
                 test: context => context.sequenceStack[0].type === "title",
                 action: (renderer, context, data) => {
-                    const htmlClass = data.bs.label === "blockTag/mt" ? "mt" : "mt2";
-                    renderer.body.push(`<div class="${htmlClass}">${renderer.topStackRow().join("").trim()}</div>\n`);
+                    const htmlClass = data.bs.label.split('/')[1];
+                    const tag = ["mt"].includes(htmlClass) ? "h1" : "h2";
+                    renderer.body.push(`<${tag} class="${htmlClass}">${renderer.topStackRow().join("").trim()}</${tag}>\n`);
                     renderer.popStackRow();
                 },
             },
             {
                 test: context => context.sequenceStack[0].type === "heading",
-                action: renderer => {
-                    const headingTag = "h3";
-                    renderer.body.push(`<${headingTag}>${renderer.topStackRow().join("").trim()}</${headingTag}>\n`);
+                action: (renderer, context, data) => {
+                    const htmlClass = data.bs.label.split("/")[1];
+                    let headingTag;
+                    switch (htmlClass) {
+                        case "s":
+                        case "is":
+                            headingTag = "h3";
+                            break;
+                        default:
+                            headingTag="h4";
+                    };
+                    renderer.body.push(`<${headingTag} class="${htmlClass}">${renderer.topStackRow().join("").trim()}</${headingTag}>\n`);
                     renderer.popStackRow();
                 },
             },
@@ -88,7 +98,7 @@ class XhtmlResultModel extends ScriptureParaResultModel {
                 },
             },
             {
-                test: context => context.sequenceStack[0].type === "main",
+                test: context => ["main", "introduction"].includes(context.sequenceStack[0].type),
                 action: (renderer, context, data) => {
                     const htmlClass = data.bs.label.split("/")[1];
                     renderer.body.push(`<div class="${htmlClass}">${renderer.topStackRow().join("").trim()}</div>\n`);
@@ -142,7 +152,7 @@ class XhtmlResultModel extends ScriptureParaResultModel {
                                 `<html xmlns="http://www.w3.org/1999/xhtml">\n<head>\n${renderer.head.join("")}\n</head>\n`,
                                 '<body>\n',
                                 renderer.body.join(""),
-                                `<h3>${renderer.config.i18n.notes}</h3>\n`,
+                                `<h2 class="notes_title">${renderer.config.i18n.notes}</h2>\n`,
                                 Object.entries(renderer.footnotes)
                                     .map(fe =>
                                         `<div><a id="footnote_${fe[0]}" href="#footnote_anchor_${fe[0]}" class="footnote_number">${fe[0]}</a>&#160;: ${fe[1].join("")}</div>\n`)
