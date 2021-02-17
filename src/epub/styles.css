@@ -4,6 +4,7 @@ h2 {font-size: x-large}
 h3 {font-size: large; font-weight: bold; margin-top: 1.5ex; margin-bottom: 0.5ex}
 h4 {font-size: medium; font-weight: bold; font-style: italic; margin-top: 1.5ex; margin-bottom: 0.5ex}
 
+.titlePage, .titlePage h1, .titlePage h2, .titlePage div img {text-align: center}
 nav ol li {list-style-type: none; margin-bottom: 1ex}
 nav ol li a {text-decoration: none}
 

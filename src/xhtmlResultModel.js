@@ -24,8 +24,10 @@ class XhtmlResultModel extends ScriptureParaResultModel {
                     renderer.zip.file("mimetype", "application/epub+zip");
                     renderer.zip.file("META-INF/container.xml", fse.readFileSync(path.resolve(this.config.configRoot, 'container.xml')));
                     renderer.zip.file("OEBPS/CSS/styles.css", fse.readFileSync(path.resolve(this.config.configRoot, 'styles.css')));
-                    renderer.zip.file("OEBPS/IMG/cover.png", fse.readFileSync(path.resolve(this.config.configRoot, 'cover.png')));
-
+                    const coverImagePath = path.resolve(this.config.configRoot, (this.config.coverImage || 'cover.png'));
+                    const coverImageSuffix = coverImagePath.split("/").reverse()[0].split(".")[1];
+                    this.config.coverImageSuffix = coverImageSuffix;
+                    renderer.zip.file(`OEBPS/IMG/cover.${coverImageSuffix}`, fse.readFileSync(coverImagePath));
                 },
             },
         ];
@@ -182,12 +184,16 @@ class XhtmlResultModel extends ScriptureParaResultModel {
                     opf = opf.replace(/%uid%/g, renderer.config.uid);
                     opf = opf.replace(/%language%/g, renderer.config.language);
                     opf = opf.replace(/%timestamp%/g, new Date().toISOString().replace(/\.\d+Z/g, "Z"));
+                    opf = opf.replace(/%coverImageSuffix%/g, renderer.config.coverImageSuffix);
+                    opf = opf.replace(/%coverImageMimetype%/g, renderer.config.coverImageSuffix === "png" ? "image/png" : "image/jpeg");
                     opf = opf.replace(/%spine%/g, renderer.config.books.map(b => `<itemref idref="body_${b}" />\n`).join(""));
                     opf = opf.replace(/%book_manifest_items%/g, renderer.config.books.map(b => `<item id="body_${b}" href="../OEBPS/XHTML/${b}/${b}.xhtml" media-type="application/xhtml+xml" />`).join(""));
                     renderer.zip.file("OEBPS/content.opf", opf);
                     let title = fse.readFileSync(path.resolve(renderer.config.configRoot, 'title.xhtml'), 'utf8');
                     title = title.replace(/%titlePage%/g, config.i18n.titlePage);
                     title = title.replace(/%copyright%/g, config.i18n.copyright);
+                    title = title.replace(/%coverAlt%/g, config.i18n.coverAlt);
+                    title = title.replace(/%coverImageSuffix%/g, renderer.config.coverImageSuffix);
                     renderer.zip.file("OEBPS/XHTML/title.xhtml", title);
                     let toc = fse.readFileSync(path.resolve(renderer.config.configRoot, 'toc.xhtml'), 'utf8');
                     toc = toc.replace(/%contentLinks%/g, config.books.map(b => `<li><a href="${b}/${b}.xhtml">${renderer.bookTitles[b][2]}</a></li>\n`).join(""));

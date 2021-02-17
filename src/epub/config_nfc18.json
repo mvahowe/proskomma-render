@@ -1,6 +1,7 @@
 {
   "sourceDir": "../../../../sbf/nfc/usx",
   "title": "La Nouvelle Bible Français Courant",
+  "coverImage": "../../../../sbf/nfc/cover.jpg",
   "language": "fr",
   "uid": "NFC18",
   "books": ["MRK", "1JN", "2JN", "3JN", "JUD"],
@@ -8,6 +9,7 @@
     "notes": "Notes de pied de page",
     "tocBooks": "Table des matières",
     "titlePage": "La Nouvelle Français courant 2019",
-    "copyright": "© Société biblique française – Bibli'0, 2019"
+    "copyright": "© Société biblique française – Bibli'0, 2019",
+    "coverAlt": "Couverture"
   }
 }
