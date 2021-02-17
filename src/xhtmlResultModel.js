@@ -142,7 +142,7 @@ class XhtmlResultModel extends ScriptureParaResultModel {
                                 `<html xmlns="http://www.w3.org/1999/xhtml">\n<head>\n${renderer.head.join("")}\n</head>\n`,
                                 '<body>\n',
                                 renderer.body.join(""),
-                                '<h3>Notes</h3>\n',
+                                `<h3>${renderer.config.i18n.notes}</h3>\n`,
                                 Object.entries(renderer.footnotes)
                                     .map(fe =>
                                         `<div><a id="footnote_${fe[0]}" href="#footnote_anchor_${fe[0]}" class="footnote_number">${fe[0]}</a>&#160;: ${fe[1].join("")}</div>\n`)
@@ -168,6 +168,7 @@ class XhtmlResultModel extends ScriptureParaResultModel {
                     renderer.zip.file("OEBPS/content.opf", opf);
                     let toc = fse.readFileSync(path.resolve(renderer.config.configRoot, 'toc.xhtml'), 'utf8');
                     toc = toc.replace(/%contentLinks%/g, config.books.map(b => `<li><a href="${b}/${b}.xhtml">${b}</a></li>\n`).join(""));
+                    toc = toc.replace(/%toc_books%/g, config.i18n.tocBooks)
                     renderer.zip.file("OEBPS/XHTML/toc.xhtml", toc);
                     // Write out zip
                     renderer.zip.generateNodeStream({type: "nodebuffer", streamFiles: true})
