@@ -1,3 +1,7 @@
+const fse = require('fs-extra');
+const path = require('path');
+const JSZip = require('jszip');
+
 const ScriptureParaResultModel = require('./scripture_para_result_model');
 
 class XhtmlResultModel extends ScriptureParaResultModel {
@@ -9,6 +13,19 @@ class XhtmlResultModel extends ScriptureParaResultModel {
         this.body = [];
         this.footnotes = {};
         this.nextFootnote = 1;
+        this.zip = null;
+        this.classActions.startDocSet = [
+            {
+                test: () => true,
+                action: (renderer) => {
+                    renderer.zip = new JSZip();
+                    renderer.zip.file("mimetype", "application/epub+zip");
+                    renderer.zip.file("META-INF/container.xml", fse.readFileSync(path.resolve(this.config.configRoot, 'container.xml')));
+                    renderer.zip.file("OEBPS/CSS/styles.css", fse.readFileSync(path.resolve(this.config.configRoot, 'styles.css')));
+
+                },
+            },
+        ];
         this.classActions.startDocument = [
             {
                 test: () => true,
@@ -96,7 +113,12 @@ class XhtmlResultModel extends ScriptureParaResultModel {
         this.classActions.token = [
             {
                 test: () => true,
-                action: (renderer, context, data) => renderer.appendToTopStackRow(["lineSpace", "eol"].includes(data.subType) ? " " : data.chars),
+                action: (renderer, context, data) =>
+                    renderer.appendToTopStackRow(
+                        ["lineSpace", "eol"].includes(data.subType) ?
+                            " " :
+                            data.chars.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    ),
             }
         ];
         this.classActions.inlineGraft = [
@@ -113,7 +135,7 @@ class XhtmlResultModel extends ScriptureParaResultModel {
             {
                 test: context => context.sequenceStack[0].type === "main",
                 action: (renderer, context) => {
-                    renderer.config.zip
+                    renderer.zip
                         .file(
                             `OEBPS/XHTML/${context.document.headers.bookCode}/${context.document.headers.bookCode}.xhtml`,
                             [
@@ -131,6 +153,28 @@ class XhtmlResultModel extends ScriptureParaResultModel {
                 }
             }
         ];
+        this.classActions.endDocSet = [
+            {
+                test: () => true,
+                action: (renderer) => {
+                    // Build OPF file
+                    let opf = fse.readFileSync(path.resolve(renderer.config.configRoot, 'content.opf'), 'utf8');
+                    opf = opf.replace(/%title%/g, renderer.config.title);
+                    opf = opf.replace(/%uid%/g, renderer.config.uid);
+                    opf = opf.replace(/%language%/g, renderer.config.language);
+                    opf = opf.replace(/%timestamp%/g, new Date().toISOString().replace(/\.\d+Z/g, "Z"));
+                    opf = opf.replace(/%spine%/g, renderer.config.books.map(b => `<itemref idref="body_${b}" />\n`).join(""));
+                    opf = opf.replace(/%book_manifest_items%/g, renderer.config.books.map(b => `<item id="body_${b}" href="../OEBPS/XHTML/${b}/${b}.xhtml" media-type="application/xhtml+xml" />`).join(""));
+                    renderer.zip.file("OEBPS/content.opf", opf);
+                    let toc = fse.readFileSync(path.resolve(renderer.config.configRoot, 'toc.xhtml'), 'utf8');
+                    toc = toc.replace(/%contentLinks%/g, config.books.map(b => `<li><a href="${b}/${b}.xhtml">${b}</a></li>\n`).join(""));
+                    renderer.zip.file("OEBPS/XHTML/toc.xhtml", toc);
+                    // Write out zip
+                    renderer.zip.generateNodeStream({type: "nodebuffer", streamFiles: true})
+                        .pipe(fse.createWriteStream(renderer.config.outputPath));
+                }
+            }
+        ]
     }
 
 }
