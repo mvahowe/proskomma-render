@@ -10,6 +10,7 @@ class XhtmlResultModel extends ScriptureParaResultModel {
         super(result);
         this.config = config;
         this.head = [];
+        this.bodyHead = [];
         this.body = [];
         this.footnotes = {};
         this.nextFootnote = 1;
@@ -40,6 +41,7 @@ class XhtmlResultModel extends ScriptureParaResultModel {
                         '<link type="text/css" rel="stylesheet" href="../../CSS/styles.css" />\n',
                     ];
                     this.body = [];
+                    this.bodyHead = [];
                     this.footnotes = {};
                     this.nextFootnote = 1;
                     this.bookTitles[context.document.headers.bookCode] = [
@@ -47,8 +49,9 @@ class XhtmlResultModel extends ScriptureParaResultModel {
                         context.document.headers.toc,
                         context.document.headers.toc2,
                         context.document.headers.toc3,
-                        ]
-                },
+                    ];
+                    this.context.document.chapters = [];
+                }
             },
         ];
         this.classActions.startSequence = [
@@ -77,7 +80,7 @@ class XhtmlResultModel extends ScriptureParaResultModel {
                 action: (renderer, context, data) => {
                     const htmlClass = data.bs.label.split('/')[1];
                     const tag = ["mt"].includes(htmlClass) ? "h1" : "h2";
-                    renderer.body.push(`<${tag} class="${htmlClass}">${renderer.topStackRow().join("").trim()}</${tag}>\n`);
+                    renderer.bodyHead.push(`<${tag} class="${htmlClass}">${renderer.topStackRow().join("").trim()}</${tag}>\n`);
                     renderer.popStackRow();
                 },
             },
@@ -121,7 +124,9 @@ class XhtmlResultModel extends ScriptureParaResultModel {
             {
                 test: (context, data) => data.itemType === "startScope" && data.label.startsWith("chapter/"),
                 action: (renderer, context, data) => {
-                    renderer.body.push(`<div class="chapter">${data.label.split("/")[1]}</div>\n`);
+                    const chapterLabel = data.label.split("/")[1];
+                    renderer.body.push(`<div id="chapter_${chapterLabel}" class="chapter"><a href="#top">${chapterLabel}</a></div>\n`);
+                    renderer.context.document.chapters.push(chapterLabel);
                 },
             },
             {
@@ -156,12 +161,15 @@ class XhtmlResultModel extends ScriptureParaResultModel {
             {
                 test: context => context.sequenceStack[0].type === "main",
                 action: (renderer, context) => {
+                    const chapterLinks = context.document.chapters.map(c => `<span class="chapter_link"><a href="#chapter_${c}">${c}</a></span>`).join("");
                     renderer.zip
                         .file(
                             `OEBPS/XHTML/${context.document.headers.bookCode}/${context.document.headers.bookCode}.xhtml`,
                             [
                                 `<html xmlns="http://www.w3.org/1999/xhtml">\n<head>\n${renderer.head.join("")}\n</head>\n`,
-                                '<body>\n',
+                                '<body id="top">\n',
+                                renderer.bodyHead.join(""),
+                                `<div class="chapter_nav">${chapterLinks}</div>`,
                                 renderer.body.join(""),
                                 `<h2 class="notes_title">${renderer.config.i18n.notes}</h2>\n`,
                                 Object.entries(renderer.footnotes)
