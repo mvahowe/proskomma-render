@@ -135,6 +135,18 @@ class XhtmlResultModel extends ScriptureParaResultModel {
                     renderer.appendToTopStackRow(`<span class="verses">${data.label.split("/")[1]}</span>&#160;`);
                 },
             },
+            {
+                test: (context, data) => data.label.startsWith("span") && ["bd", "bk", "em", "fq", "fqa", "fr", "ord", "sls", "wj"].includes(data.label.split("/")[1]),
+                action: (renderer, context, data) => {
+                    if (data.itemType === "startScope") {
+                        renderer.pushStackRow();
+                    } else {
+                        const spanContent = renderer.topStackRow().join("").trim();
+                        renderer.popStackRow();
+                        renderer.topStackRow().push(`<span class="${data.label.split("/")[1]}">${spanContent}</span>\n`);
+                    }
+                },
+            },
         ];
         this.classActions.token = [
             {
