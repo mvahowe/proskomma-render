@@ -1,5 +1,5 @@
 {
-  "sourceDir": "../../../sag_usfm/eng/web",
+  "sourceDir": "../../../../sag_usfm/eng/web",
   "title": "World English Bible",
   "language": "en",
   "uid": "WEB",

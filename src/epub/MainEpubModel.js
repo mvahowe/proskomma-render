@@ -2,9 +2,9 @@ const fse = require('fs-extra');
 const path = require('path');
 const JSZip = require('jszip');
 
-const ScriptureParaResultModel = require('./scripture_para_result_model');
+const ScriptureParaResultModel = require('../scripture_para_result_model');
 
-class XhtmlResultModel extends ScriptureParaResultModel {
+class MainEpubModel extends ScriptureParaResultModel {
 
     constructor(result, config) {
         super(result);
@@ -23,12 +23,14 @@ class XhtmlResultModel extends ScriptureParaResultModel {
                     renderer.bookTitles = {};
                     renderer.zip = new JSZip();
                     renderer.zip.file("mimetype", "application/epub+zip");
-                    renderer.zip.file("META-INF/container.xml", fse.readFileSync(path.resolve(this.config.configRoot, 'container.xml')));
-                    renderer.zip.file("OEBPS/CSS/styles.css", fse.readFileSync(path.resolve(this.config.configRoot, 'styles.css')));
-                    const coverImagePath = path.resolve(this.config.configRoot, (this.config.coverImage || 'cover.png'));
+                    renderer.zip.file("META-INF/container.xml", fse.readFileSync(path.resolve(this.config.codeRoot, 'resources/container.xml')));
+                    renderer.zip.file("OEBPS/CSS/styles.css", fse.readFileSync(path.resolve(this.config.codeRoot, 'resources/styles.css')));
+                    const coverImagePath = this.config.coverImage ?
+                        path.resolve(this.config.configRoot, this.config.coverImage) :
+                        path.resolve(this.config.codeRoot,'resources/cover.png');
                     const coverImageSuffix = coverImagePath.split("/").reverse()[0].split(".")[1];
                     this.config.coverImageSuffix = coverImageSuffix;
-                    renderer.zip.file(`OEBPS/IMG/cover.${coverImageSuffix}`, fse.readFileSync(coverImagePath));
+                    renderer.zip.file(`OEBPS/IMG/cover.${coverImageSuffix}`, fse.readFileSync(path.resolve(this.config.configRoot, coverImagePath)));
                 },
             },
         ];
@@ -199,7 +201,7 @@ class XhtmlResultModel extends ScriptureParaResultModel {
                 test: () => true,
                 action: (renderer) => {
                     // Build OPF file
-                    let opf = fse.readFileSync(path.resolve(renderer.config.configRoot, 'content.opf'), 'utf8');
+                    let opf = fse.readFileSync(path.resolve(renderer.config.codeRoot, 'resources/content.opf'), 'utf8');
                     opf = opf.replace(/%title%/g, renderer.config.title);
                     opf = opf.replace(/%uid%/g, renderer.config.uid);
                     opf = opf.replace(/%language%/g, renderer.config.language);
@@ -209,13 +211,13 @@ class XhtmlResultModel extends ScriptureParaResultModel {
                     opf = opf.replace(/%spine%/g, renderer.config.books.map(b => `<itemref idref="body_${b}" />\n`).join(""));
                     opf = opf.replace(/%book_manifest_items%/g, renderer.config.books.map(b => `<item id="body_${b}" href="../OEBPS/XHTML/${b}/${b}.xhtml" media-type="application/xhtml+xml" />`).join(""));
                     renderer.zip.file("OEBPS/content.opf", opf);
-                    let title = fse.readFileSync(path.resolve(renderer.config.configRoot, 'title.xhtml'), 'utf8');
+                    let title = fse.readFileSync(path.resolve(renderer.config.codeRoot, 'resources/title.xhtml'), 'utf8');
                     title = title.replace(/%titlePage%/g, config.i18n.titlePage);
                     title = title.replace(/%copyright%/g, config.i18n.copyright);
                     title = title.replace(/%coverAlt%/g, config.i18n.coverAlt);
                     title = title.replace(/%coverImageSuffix%/g, renderer.config.coverImageSuffix);
                     renderer.zip.file("OEBPS/XHTML/title.xhtml", title);
-                    let toc = fse.readFileSync(path.resolve(renderer.config.configRoot, 'toc.xhtml'), 'utf8');
+                    let toc = fse.readFileSync(path.resolve(renderer.config.codeRoot, 'resources/toc.xhtml'), 'utf8');
                     toc = toc.replace(/%contentLinks%/g, config.books.map(b => `<li><a href="${b}/${b}.xhtml">${renderer.bookTitles[b][2]}</a></li>\n`).join(""));
                     toc = toc.replace(/%toc_books%/g, config.i18n.tocBooks)
                     renderer.zip.file("OEBPS/XHTML/toc.xhtml", toc);
@@ -229,4 +231,4 @@ class XhtmlResultModel extends ScriptureParaResultModel {
 
 }
 
-module.exports = XhtmlResultModel;
+module.exports = MainEpubModel;
