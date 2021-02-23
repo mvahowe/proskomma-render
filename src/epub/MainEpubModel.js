@@ -27,7 +27,7 @@ class MainEpubModel extends ScriptureParaResultModel {
                     renderer.zip.file("OEBPS/CSS/styles.css", fse.readFileSync(path.resolve(this.config.codeRoot, 'resources/styles.css')));
                     const coverImagePath = this.config.coverImage ?
                         path.resolve(this.config.configRoot, this.config.coverImage) :
-                        path.resolve(this.config.codeRoot,'resources/cover.png');
+                        path.resolve(this.config.codeRoot, 'resources/cover.png');
                     const coverImageSuffix = coverImagePath.split("/").reverse()[0].split(".")[1];
                     this.config.coverImageSuffix = coverImageSuffix;
                     renderer.zip.file(`OEBPS/IMG/cover.${coverImageSuffix}`, fse.readFileSync(path.resolve(this.config.configRoot, coverImagePath)));
@@ -38,20 +38,26 @@ class MainEpubModel extends ScriptureParaResultModel {
             {
                 test: () => true,
                 action: (renderer, context) => {
+                    let cssPath = "../../CSS/styles.css";
+                    if (context.document.headers.bookCode === "GLO") {
+                        cssPath = "../CSS/styles.css";
+                    }
                     this.head = [
                         '<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/>\n',
-                        '<link type="text/css" rel="stylesheet" href="../../CSS/styles.css" />\n',
+                        `<link type="text/css" rel="stylesheet" href="${cssPath}" />\n`,
                     ];
                     this.body = [];
                     this.bodyHead = [];
                     this.footnotes = {};
                     this.nextFootnote = 1;
-                    this.bookTitles[context.document.headers.bookCode] = [
-                        context.document.headers.h,
-                        context.document.headers.toc,
-                        context.document.headers.toc2,
-                        context.document.headers.toc3,
-                    ];
+                    if (context.document.headers.bookCode !== "GLO") {
+                        this.bookTitles[context.document.headers.bookCode] = [
+                            context.document.headers.h,
+                            context.document.headers.toc,
+                            context.document.headers.toc2,
+                            context.document.headers.toc3,
+                        ];
+                    }
                     this.context.document.chapters = [];
                 }
             },
@@ -97,8 +103,9 @@ class MainEpubModel extends ScriptureParaResultModel {
                             headingTag = "h3";
                             break;
                         default:
-                            headingTag="h4";
-                    };
+                            headingTag = "h4";
+                    }
+                    ;
                     renderer.body.push(`<${headingTag} class="${htmlClass}">${renderer.topStackRow().join("").trim()}</${headingTag}>\n`);
                     renderer.popStackRow();
                 },
@@ -124,7 +131,7 @@ class MainEpubModel extends ScriptureParaResultModel {
         ];
         this.classActions.scope = [
             {
-                test: (context, data) => data.itemType === "startScope" && data.label.startsWith("chapter/"),
+                test: (context, data) => data.itemType === "startScope" && data.label.startsWith("chapter/") && context.document.headers.bookCode !== "GLO",
                 action: (renderer, context, data) => {
                     const chapterLabel = data.label.split("/")[1];
                     renderer.body.push(`<div id="chapter_${chapterLabel}" class="chapter"><a href="#top">${chapterLabel}</a></div>\n`);
@@ -138,7 +145,7 @@ class MainEpubModel extends ScriptureParaResultModel {
                 },
             },
             {
-                test: (context, data) => data.label.startsWith("span") && ["bd", "bk", "em", "fq", "fqa", "fr", "ord", "sls", "wj"].includes(data.label.split("/")[1]),
+                test: (context, data) => data.label.startsWith("span") && ["bd", "bk", "em", "fq", "fqa", "fr", "k", "ord", "sls", "wj", "xt"].includes(data.label.split("/")[1]),
                 action: (renderer, context, data) => {
                     if (data.itemType === "startScope") {
                         renderer.pushStackRow();
@@ -175,20 +182,26 @@ class MainEpubModel extends ScriptureParaResultModel {
             {
                 test: context => context.sequenceStack[0].type === "main",
                 action: (renderer, context) => {
-                    const chapterLinks = context.document.chapters.map(c => `<span class="chapter_link"><a href="#chapter_${c}">${c}</a></span>`).join("");
+                    let chapterLinks = "<span class=\"chapter_link\"><a href=\"../toc.xhtml\">^</a></span>";
+                    chapterLinks += context.document.chapters.map(c => `<span class="chapter_link"><a href="#chapter_${c}">${c}</a></span>`).join("");
+                    let bodyHead = renderer.bodyHead.join("");
                     renderer.zip
                         .file(
-                            `OEBPS/XHTML/${context.document.headers.bookCode}/${context.document.headers.bookCode}.xhtml`,
+                            context.document.headers.bookCode !== "GLO" ?
+                                `OEBPS/XHTML/${context.document.headers.bookCode}/${context.document.headers.bookCode}.xhtml` :
+                                "OEBPS/XHTML/GLO.xhtml",
                             [
                                 `<html xmlns="http://www.w3.org/1999/xhtml">\n<head>\n${renderer.head.join("")}\n</head>\n`,
                                 '<body id="top">\n',
-                                renderer.bodyHead.join(""),
-                                `<div class="chapter_nav">${chapterLinks}</div>`,
+                                context.document.chapters.length > 0 ? `<div class="chapter_nav">${chapterLinks}</div>` : "",
+                                bodyHead,
                                 renderer.body.join(""),
-                                `<h2 class="notes_title">${renderer.config.i18n.notes}</h2>\n`,
+                                Object.keys(renderer.footnotes).length > 0 ?
+                                    `<h2 class="notes_title">${renderer.config.i18n.notes}</h2>\n` :
+                                    "",
                                 Object.entries(renderer.footnotes)
                                     .map(fe =>
-                                        `<div><a id="footnote_${fe[0]}" href="#footnote_anchor_${fe[0]}" class="footnote_number">${fe[0]}</a>&#160;: ${fe[1].join("")}</div>\n`)
+                                        `<div class="footnote"><a id="footnote_${fe[0]}" href="#footnote_anchor_${fe[0]}" class="footnote_number">${fe[0]}</a>&#160;: ${fe[1].join("")}</div>\n`)
                                     .join(""),
                                 '</body>\n</html>\n'
                             ].join("")
@@ -200,7 +213,7 @@ class MainEpubModel extends ScriptureParaResultModel {
             {
                 test: () => true,
                 action: (renderer) => {
-                    // Build OPF file
+                    const canonicalBooks = this.config.books.filter(b => b in renderer.bookTitles);
                     let opf = fse.readFileSync(path.resolve(renderer.config.codeRoot, 'resources/content.opf'), 'utf8');
                     opf = opf.replace(/%title%/g, renderer.config.title);
                     opf = opf.replace(/%uid%/g, renderer.config.uid);
@@ -208,8 +221,16 @@ class MainEpubModel extends ScriptureParaResultModel {
                     opf = opf.replace(/%timestamp%/g, new Date().toISOString().replace(/\.\d+Z/g, "Z"));
                     opf = opf.replace(/%coverImageSuffix%/g, renderer.config.coverImageSuffix);
                     opf = opf.replace(/%coverImageMimetype%/g, renderer.config.coverImageSuffix === "png" ? "image/png" : "image/jpeg");
-                    opf = opf.replace(/%spine%/g, renderer.config.books.map(b => `<itemref idref="body_${b}" />\n`).join(""));
-                    opf = opf.replace(/%book_manifest_items%/g, renderer.config.books.map(b => `<item id="body_${b}" href="../OEBPS/XHTML/${b}/${b}.xhtml" media-type="application/xhtml+xml" />`).join(""));
+                    let spineContent = canonicalBooks.map(b => `<itemref idref="body_${b}" />\n`).join("");
+                    if (config.books.includes("GLO")) {
+                        spineContent = spineContent.concat(`<itemref idref="body_GLO" />\n`);
+                    }
+                    opf = opf.replace(/%spine%/g, spineContent);
+                    let manifestContent = canonicalBooks.map(b => `<item id="body_${b}" href="../OEBPS/XHTML/${b}/${b}.xhtml" media-type="application/xhtml+xml" />`).join("");
+                    if (config.books.includes("GLO")) {
+                        manifestContent = manifestContent.concat(`<item id="body_GLO" href="../OEBPS/XHTML/GLO.xhtml" media-type="application/xhtml+xml" />`);
+                    }
+                    opf = opf.replace(/%book_manifest_items%/g, manifestContent);
                     renderer.zip.file("OEBPS/content.opf", opf);
                     let title = fse.readFileSync(path.resolve(renderer.config.codeRoot, 'resources/title.xhtml'), 'utf8');
                     title = title.replace(/%titlePage%/g, config.i18n.titlePage);
@@ -218,10 +239,16 @@ class MainEpubModel extends ScriptureParaResultModel {
                     title = title.replace(/%coverImageSuffix%/g, renderer.config.coverImageSuffix);
                     renderer.zip.file("OEBPS/XHTML/title.xhtml", title);
                     let toc = fse.readFileSync(path.resolve(renderer.config.codeRoot, 'resources/toc.xhtml'), 'utf8');
-                    toc = toc.replace(/%contentLinks%/g, config.books.map(b => `<li><a href="${b}/${b}.xhtml">${renderer.bookTitles[b][2]}</a></li>\n`).join(""));
+                    let tocContent = canonicalBooks
+                        .map(
+                            b => `<li><a href="${b}/${b}.xhtml">${renderer.bookTitles[b][2]}</a></li>\n`
+                        );
+                    if (config.books.includes("GLO")) {
+                        tocContent.push(`<li><a href="GLO.xhtml">${config.i18n.glossary}</a></li>\n`);
+                    }
+                    toc = toc.replace(/%contentLinks%/g, tocContent.join(""));
                     toc = toc.replace(/%toc_books%/g, config.i18n.tocBooks)
                     renderer.zip.file("OEBPS/XHTML/toc.xhtml", toc);
-                    // Write out zip
                     renderer.zip.generateNodeStream({type: "nodebuffer", streamFiles: true})
                         .pipe(fse.createWriteStream(renderer.config.outputPath));
                 }
