@@ -16,17 +16,17 @@ const bookMatches = str => {
     return false;
 }
 
-const doMainEpubRender =  (pk, config, result) => {
+const doMainEpubRender = (pk, config, result) => {
     ts = Date.now();
     const model = new mainEpubRenderModel(result, config);
     model.render();
-    console.log(`Main ePub rendered in  ${(Date.now() - ts)/1000} sec`);
+    console.log(`Main ePub rendered in  ${(Date.now() - ts) / 1000} sec`);
 }
 
 const doRender = async (pk, config) => {
     await doModelQuery(pk)
         .then(result => {
-                console.log(`Query processed in  ${(Date.now() - ts)/1000} sec`);
+                console.log(`Query processed in  ${(Date.now() - ts) / 1000} sec`);
                 doMainEpubRender(pk, config, result);
             }
         )
@@ -59,7 +59,8 @@ for (const filePath of fse.readdirSync(fqSourceDir)) {
         );
     }
 }
-console.log(`${nBooks} book(s) loaded in ${(Date.now() - ts)/1000} sec`);
+console.log(`${nBooks} book(s) loaded in ${(Date.now() - ts) / 1000} sec`);
 ts = Date.now();
 
-doRender(pk, config).then(() => {});
+doRender(pk, config).then(() => {
+});

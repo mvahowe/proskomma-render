@@ -152,7 +152,7 @@ class MainEpubModel extends ScriptureParaResultModel {
                     } else {
                         const spanContent = renderer.topStackRow().join("").trim();
                         renderer.popStackRow();
-                        renderer.topStackRow().push(`<span class="${data.label.split("/")[1]}">${spanContent}</span>\n`);
+                        renderer.topStackRow().push(`<span class="${data.label.split("/")[1]}">${spanContent}</span>`);
                     }
                 },
             },
