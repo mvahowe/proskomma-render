@@ -105,7 +105,6 @@ class MainEpubModel extends ScriptureParaResultModel {
                         default:
                             headingTag = "h4";
                     }
-                    ;
                     renderer.body.push(`<${headingTag} class="${htmlClass}">${renderer.topStackRow().join("").trim()}</${headingTag}>\n`);
                     renderer.popStackRow();
                 },
@@ -160,12 +159,29 @@ class MainEpubModel extends ScriptureParaResultModel {
         this.classActions.token = [
             {
                 test: () => true,
-                action: (renderer, context, data) =>
-                    renderer.appendToTopStackRow(
-                        ["lineSpace", "eol"].includes(data.subType) ?
-                            " " :
-                            data.chars.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-                    ),
+                action: (renderer, context, data) => {
+                    let tokenString;
+                    if (["lineSpace", "eol"].includes(data.subType)) {
+                        tokenString = " ";
+                    } else if ([";", "!", "?"].includes(data.chars)) {
+                        if (renderer.topStackRow().length > 0) {
+                            let lastPushed = renderer.topStackRow().pop();
+                            lastPushed = lastPushed.replace(/ $/, "&#8239;");
+                            renderer.appendToTopStackRow(lastPushed);
+                        }
+                        tokenString = data.chars;
+                    } else if ([":", "»"].includes(data.chars)) {
+                        if (renderer.topStackRow().length > 0) {
+                            let lastPushed = renderer.topStackRow().pop();
+                            lastPushed = lastPushed.replace(/ $/, "&#160;");
+                            renderer.appendToTopStackRow(lastPushed);
+                        }
+                        tokenString = data.chars;
+                    } else {
+                        tokenString = data.chars.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    }
+                    return renderer.appendToTopStackRow(tokenString);
+                },
             }
         ];
         this.classActions.inlineGraft = [
