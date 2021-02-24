@@ -5,6 +5,7 @@ const path = require('path');
 
 const {ProsKomma} = require('proskomma');
 const doModelQuery = require('../model_query');
+const GlossaryScan = require('./GlossaryScan');
 const mainEpubRenderModel = require('./MainEpubModel');
 
 const bookMatches = str => {
@@ -16,7 +17,14 @@ const bookMatches = str => {
     return false;
 }
 
-const doMainEpubRender = (pk, config, result) => {
+const doGlossaryScan = (config, result) => {
+    ts = Date.now();
+    const model = new GlossaryScan(result, config);
+    model.render();
+    console.log(`Glossary Scan in  ${(Date.now() - ts) / 1000} sec`);
+}
+
+const doMainEpubRender = (config, result) => {
     ts = Date.now();
     const model = new mainEpubRenderModel(result, config);
     model.render();
@@ -27,7 +35,8 @@ const doRender = async (pk, config) => {
     await doModelQuery(pk)
         .then(result => {
                 console.log(`Query processed in  ${(Date.now() - ts) / 1000} sec`);
-                doMainEpubRender(pk, config, result);
+                doGlossaryScan(config, result);
+                doMainEpubRender(config, result);
             }
         )
 };

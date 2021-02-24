@@ -241,7 +241,7 @@ class ScriptureParaResultModel {
 
     popStackRow() {
         this.applyClassActions(this.allActions.endStackRow, this.topStackRow);
-        this.context.sequenceStack[0].renderStack.shift();
+        return this.context.sequenceStack[0].renderStack.shift();
     }
 
 }

@@ -16,6 +16,7 @@ class MainEpubModel extends ScriptureParaResultModel {
         this.nextFootnote = 1;
         this.zip = null;
         this.bookTitles = {};
+        this.glossaryLemma = "";
         this.classActions.startDocSet = [
             {
                 test: () => true,
@@ -144,6 +145,19 @@ class MainEpubModel extends ScriptureParaResultModel {
                 },
             },
             {
+                test: (context, data) => data.label === "span/k" && data.itemType === "endScope",
+                action: renderer => {
+                    const spanContent = renderer.topStackRow().join("").trim();
+                    renderer.popStackRow();
+                    const glossaryN = renderer.config.glossaryTerms[spanContent];
+                    if (glossaryN) {
+                        renderer.topStackRow().push(`<span id="glo_${glossaryN}" class="k">${spanContent}</span>`);
+                    } else {
+                        renderer.topStackRow().push(`<span class="k">${spanContent}</span>`);
+                    }
+                },
+            },
+            {
                 test: (context, data) => data.label.startsWith("span") && ["bd", "bk", "em", "fq", "fqa", "fr", "k", "ord", "sls", "wj", "xt"].includes(data.label.split("/")[1]),
                 action: (renderer, context, data) => {
                     if (data.itemType === "startScope") {
@@ -152,6 +166,22 @@ class MainEpubModel extends ScriptureParaResultModel {
                         const spanContent = renderer.topStackRow().join("").trim();
                         renderer.popStackRow();
                         renderer.topStackRow().push(`<span class="${data.label.split("/")[1]}">${spanContent}</span>`);
+                    }
+                },
+            },
+            {
+                test: (context, data) => data.label === "spanWithAtts/w",
+                action: (renderer, context, data) => {
+                    if (data.itemType === "startScope") {
+                        renderer.pushStackRow();
+                    } else {
+                        const spanContent = renderer.topStackRow().join("").trim();
+                        renderer.popStackRow();
+                        renderer.topStackRow().push(spanContent);
+                        const glossaryN = renderer.config.glossaryTerms[spanContent];
+                        if (glossaryN) {
+                            renderer.topStackRow().push(`<a class="glossaryLink" href="../GLO.xhtml#glo_${glossaryN}">*</a>`);
+                        }
                     }
                 },
             },

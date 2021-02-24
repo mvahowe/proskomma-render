@@ -54,6 +54,7 @@ nav ol li a {text-decoration: none}
 .chapter {padding-right: 0.25em; float: left}
 .chapter a {font-size: xx-large; text-decoration: none}
 .verses {font-size: small; font-weight: bold}
+a.glossaryLink {text-decoration: none}
 a.footnote_anchor {font-size: small; vertical-align: top; text-decoration: none}
 a.footnote_number {font-size: large; text-decoration: none}
 div.footnote {padding-left: 2.5em; text-indent: -2.5em}
