@@ -145,14 +145,22 @@ class MainEpubModel extends ScriptureParaResultModel {
                 },
             },
             {
+                test: (context, data) => data.label.startsWith("attribute/spanWithAtts/w/lemma"),
+                action: (renderer, context, data) => {
+                    this.glossaryLemma = data.label.split("/")[5];
+                }
+            },
+            {
                 test: (context, data) => data.label === "span/k" && data.itemType === "endScope",
                 action: renderer => {
                     const spanContent = renderer.topStackRow().join("").trim();
+                    const spanKey = this.glossaryLemma || spanContent;
                     renderer.popStackRow();
-                    const glossaryN = renderer.config.glossaryTerms[spanContent];
+                    const glossaryN = renderer.config.glossaryTerms[spanKey];
                     if (glossaryN) {
                         renderer.topStackRow().push(`<span id="glo_${glossaryN}" class="k">${spanContent}</span>`);
                     } else {
+                        console.log(`No match for '${spanContent}`);
                         renderer.topStackRow().push(`<span class="k">${spanContent}</span>`);
                     }
                 },
@@ -174,11 +182,13 @@ class MainEpubModel extends ScriptureParaResultModel {
                 action: (renderer, context, data) => {
                     if (data.itemType === "startScope") {
                         renderer.pushStackRow();
+                        this.glossaryLemma = null;
                     } else {
                         const spanContent = renderer.topStackRow().join("").trim();
+                        const spanKey = this.glossaryLemma || spanContent;
                         renderer.popStackRow();
                         renderer.topStackRow().push(spanContent);
-                        const glossaryN = renderer.config.glossaryTerms[spanContent];
+                        const glossaryN = renderer.config.glossaryTerms[spanKey];
                         if (glossaryN) {
                             renderer.topStackRow().push(`<a class="glossaryLink" href="../GLO.xhtml#glo_${glossaryN}">*</a>`);
                         }

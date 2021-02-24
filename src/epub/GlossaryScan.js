@@ -24,7 +24,7 @@ class GlossaryScan extends ScriptureParaResultModel {
                         if (kContent in this.config.glossaryTerms) {
                             console.log(`WARNING: k value '${kContent}' used more than once`);
                         } else {
-                            this.config.glossaryTerms[kContent] = Object.keys(this.config.glossaryTerms).length;
+                            this.config.glossaryTerms[kContent] = Object.keys(this.config.glossaryTerms).length+1;
                         }
                         this.inK = false;
                     }
