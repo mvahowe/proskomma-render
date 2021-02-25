@@ -16,7 +16,20 @@ class MainEpubModel extends ScriptureParaResultModel {
         this.nextFootnote = 1;
         this.zip = null;
         this.bookTitles = {};
-        this.glossaryLemma = "";
+        this.glossaryLemma = null;
+        this.chapter = {
+            waiting: false,
+            c: null,
+            cp: null,
+            ca: null,
+            cc: 0
+        };
+        this.verses = {
+            waiting: false,
+            v: null,
+            vp: null,
+            va: null
+        };
         this.classActions.startDocSet = [
             {
                 test: () => true,
@@ -59,6 +72,20 @@ class MainEpubModel extends ScriptureParaResultModel {
                             context.document.headers.toc3,
                         ];
                     }
+                    this.chapter = {
+                        waiting: false,
+                        c: null,
+                        cp: null,
+                        ca: null,
+                        cc: 0
+                    };
+                    this.verses = {
+                        waiting: false,
+                        v: null,
+                        vp: null,
+                        va: null
+                    };
+
                     this.context.document.chapters = [];
                 }
             },
@@ -133,28 +160,42 @@ class MainEpubModel extends ScriptureParaResultModel {
             {
                 test: (context, data) => data.itemType === "startScope" && data.label.startsWith("chapter/") && context.document.headers.bookCode !== "GLO",
                 action: (renderer, context, data) => {
+                    this.chapter.waiting = true;
                     const chapterLabel = data.label.split("/")[1];
-                    renderer.body.push(`<div id="chapter_${chapterLabel}" class="chapter"><a href="#top">${chapterLabel}</a></div>\n`);
-                    renderer.context.document.chapters.push(chapterLabel);
+                    this.chapter.c = chapterLabel;
+                    this.chapter.cp = null;
+                    this.chapter.ca = null;
+                    this.chapter.cc++
+                },
+            },
+            {
+                test: (context, data) => data.itemType === "startScope" && data.label.startsWith("pubChapter/") && context.document.headers.bookCode !== "GLO",
+                action: (renderer, context, data) => {
+                    this.chapter.waiting = true;
+                    const chapterLabel = data.label.split("/")[1];
+                    this.chapter.cp = chapterLabel;
+                    this.chapter.cc++
                 },
             },
             {
                 test: (context, data) => data.itemType === "startScope" && data.label.startsWith("verses/") && !(data.label.endsWith("/1")),
                 action: (renderer, context, data) => {
-                    renderer.appendToTopStackRow(`<span class="verses">${data.label.split("/")[1]}</span>&#160;`);
+                    this.verses.waiting = true;
+                    const verseLabel = data.label.split("/")[1];
+                    this.verses.v = verseLabel;
                 },
             },
             {
                 test: (context, data) => data.label.startsWith("attribute/spanWithAtts/w/lemma"),
                 action: (renderer, context, data) => {
-                    this.glossaryLemma = data.label.split("/")[5];
+                    renderer.glossaryLemma = data.label.split("/")[5];
                 }
             },
             {
                 test: (context, data) => data.label === "span/k" && data.itemType === "endScope",
                 action: renderer => {
                     const spanContent = renderer.topStackRow().join("").trim();
-                    const spanKey = this.glossaryLemma || spanContent;
+                    const spanKey = spanContent;
                     renderer.popStackRow();
                     const glossaryN = renderer.config.glossaryTerms[spanKey];
                     if (glossaryN) {
@@ -182,10 +223,10 @@ class MainEpubModel extends ScriptureParaResultModel {
                 action: (renderer, context, data) => {
                     if (data.itemType === "startScope") {
                         renderer.pushStackRow();
-                        this.glossaryLemma = null;
+                        renderer.glossaryLemma = null;
                     } else {
                         const spanContent = renderer.topStackRow().join("").trim();
-                        const spanKey = this.glossaryLemma || spanContent;
+                        const spanKey = renderer.glossaryLemma || spanContent;
                         renderer.popStackRow();
                         renderer.topStackRow().push(spanContent);
                         const glossaryN = renderer.config.glossaryTerms[spanKey];
@@ -203,22 +244,28 @@ class MainEpubModel extends ScriptureParaResultModel {
                     let tokenString;
                     if (["lineSpace", "eol"].includes(data.subType)) {
                         tokenString = " ";
-                    } else if ([";", "!", "?"].includes(data.chars)) {
-                        if (renderer.topStackRow().length > 0) {
-                            let lastPushed = renderer.topStackRow().pop();
-                            lastPushed = lastPushed.replace(/ $/, "&#8239;");
-                            renderer.appendToTopStackRow(lastPushed);
-                        }
-                        tokenString = data.chars;
-                    } else if ([":", "»"].includes(data.chars)) {
-                        if (renderer.topStackRow().length > 0) {
-                            let lastPushed = renderer.topStackRow().pop();
-                            lastPushed = lastPushed.replace(/ $/, "&#160;");
-                            renderer.appendToTopStackRow(lastPushed);
-                        }
-                        tokenString = data.chars;
                     } else {
-                        tokenString = data.chars.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        if (context.sequenceStack[0].type === "main") {
+                            this.maybeRenderChapter();
+                            this.maybeRenderVerse();
+                        }
+                        if ([";", "!", "?"].includes(data.chars)) {
+                            if (renderer.topStackRow().length > 0) {
+                                let lastPushed = renderer.topStackRow().pop();
+                                lastPushed = lastPushed.replace(/ $/, "&#8239;");
+                                renderer.appendToTopStackRow(lastPushed);
+                            }
+                            tokenString = data.chars;
+                        } else if ([":", "»"].includes(data.chars)) {
+                            if (renderer.topStackRow().length > 0) {
+                                let lastPushed = renderer.topStackRow().pop();
+                                lastPushed = lastPushed.replace(/ $/, "&#160;");
+                                renderer.appendToTopStackRow(lastPushed);
+                            }
+                            tokenString = data.chars;
+                        } else {
+                            tokenString = data.chars.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        }
                     }
                     return renderer.appendToTopStackRow(tokenString);
                 },
@@ -239,7 +286,7 @@ class MainEpubModel extends ScriptureParaResultModel {
                 test: context => context.sequenceStack[0].type === "main",
                 action: (renderer, context) => {
                     let chapterLinks = "<span class=\"chapter_link\"><a href=\"../toc.xhtml\">^</a></span>";
-                    chapterLinks += context.document.chapters.map(c => `<span class="chapter_link"><a href="#chapter_${c}">${c}</a></span>`).join("");
+                    chapterLinks += context.document.chapters.map(c => `<span class="chapter_link"><a href="#chapter_${c[0]}">${c[1]}</a></span>`).join("");
                     let bodyHead = renderer.bodyHead.join("");
                     renderer.zip
                         .file(
@@ -310,6 +357,27 @@ class MainEpubModel extends ScriptureParaResultModel {
                 }
             }
         ]
+    }
+
+    maybeRenderChapter() {
+        if (this.chapter.waiting) {
+            const chapterLabel = this.chapter.cp || this.chapter.c;
+            let chapterId = this.chapter.c;
+            if (this.chapter.cc > 1) {
+                chapterId = `${chapterId}_${this.chapter.cc}`;
+            }
+            this.context.document.chapters.push([chapterId, chapterLabel]);
+            this.body.push(`<div id="chapter_${chapterId}" class="chapter"><a href="#top">${chapterLabel}</a></div>\n`);
+            this.chapter.waiting = false;
+        }
+    }
+
+    maybeRenderVerse() {
+        if (this.verses.waiting) {
+            const verseLabel = this.verses.v;
+            this.appendToTopStackRow(`<span class="verses">${verseLabel}</span>&#160;`);
+            this.verses.waiting = false;
+        }
     }
 
 }
