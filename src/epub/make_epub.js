@@ -57,6 +57,7 @@ const pk = new ProsKomma();
 const fqSourceDir = path.resolve(config.configRoot, config.sourceDir);
 for (const filePath of fse.readdirSync(fqSourceDir)) {
     if (bookMatches(filePath)) {
+        console.log(`   ${filePath}`);
         nBooks++;
         const content = fse.readFileSync(path.join(fqSourceDir, filePath));
         const contentType = filePath.split('.').pop();

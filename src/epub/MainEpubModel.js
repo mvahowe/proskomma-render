@@ -76,14 +76,13 @@ class MainEpubModel extends ScriptureParaResultModel {
                         waiting: false,
                         c: null,
                         cp: null,
-                        ca: null,
                         cc: 0
                     };
                     this.verses = {
                         waiting: false,
                         v: null,
                         vp: null,
-                        va: null
+                        vc: 0
                     };
 
                     this.context.document.chapters = [];
@@ -174,7 +173,7 @@ class MainEpubModel extends ScriptureParaResultModel {
                     this.chapter.waiting = true;
                     const chapterLabel = data.label.split("/")[1];
                     this.chapter.cp = chapterLabel;
-                    this.chapter.cc++
+                    this.chapter.cc++;
                 },
             },
             {
@@ -183,6 +182,17 @@ class MainEpubModel extends ScriptureParaResultModel {
                     this.verses.waiting = true;
                     const verseLabel = data.label.split("/")[1];
                     this.verses.v = verseLabel;
+                    this.verses.vp = null;
+                    this.verses.vc++;
+                },
+            },
+            {
+                test: (context, data) => data.itemType === "startScope" && data.label.startsWith("pubVerse/") && context.document.headers.bookCode !== "GLO",
+                action: (renderer, context, data) => {
+                    this.verses.waiting = true;
+                    const verseLabel = data.label.split("/")[1];
+                    this.verses.vp = verseLabel;
+                    this.verses.vc++;
                 },
             },
             {
@@ -374,7 +384,7 @@ class MainEpubModel extends ScriptureParaResultModel {
 
     maybeRenderVerse() {
         if (this.verses.waiting) {
-            const verseLabel = this.verses.v;
+            const verseLabel = this.verses.vp || this.verses.v;
             this.appendToTopStackRow(`<span class="verses">${verseLabel}</span>&#160;`);
             this.verses.waiting = false;
         }
