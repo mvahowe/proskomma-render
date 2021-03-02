@@ -30,6 +30,9 @@ class MainEpubModel extends ScriptureParaResultModel {
             vp: null,
             va: null
         };
+        this.report = {
+            unhandledSpans: new Set(),
+        }
         this.classActions.startDocSet = [
             {
                 test: () => true,
@@ -177,7 +180,7 @@ class MainEpubModel extends ScriptureParaResultModel {
                 },
             },
             {
-                test: (context, data) => data.itemType === "startScope" && data.label.startsWith("verses/") && !(data.label.endsWith("/1")),
+                test: (context, data) => data.itemType === "startScope" && data.label.startsWith("verses/"),
                 action: (renderer, context, data) => {
                     this.verses.waiting = true;
                     const verseLabel = data.label.split("/")[1];
@@ -204,7 +207,7 @@ class MainEpubModel extends ScriptureParaResultModel {
             {
                 test: (context, data) => data.label === "span/k" && data.itemType === "endScope",
                 action: renderer => {
-                    const spanContent = renderer.topStackRow().join("").trim();
+                    const spanContent = renderer.topStackRow().join("");
                     const spanKey = spanContent;
                     renderer.popStackRow();
                     const glossaryN = renderer.config.glossaryTerms[spanKey];
@@ -217,12 +220,12 @@ class MainEpubModel extends ScriptureParaResultModel {
                 },
             },
             {
-                test: (context, data) => data.label.startsWith("span") && ["bd", "bk", "em", "fq", "fqa", "fr", "k", "ord", "sls", "wj", "xt"].includes(data.label.split("/")[1]),
+                test: (context, data) => data.label.startsWith("span") && ["bd", "bk", "dc", "em", "ft", "fq", "fqa", "fr", "fv", "it", "k", "ord", "pn", "qs", "sls", "tl", "wj", "xt"].includes(data.label.split("/")[1]),
                 action: (renderer, context, data) => {
                     if (data.itemType === "startScope") {
                         renderer.pushStackRow();
                     } else {
-                        const spanContent = renderer.topStackRow().join("").trim();
+                        const spanContent = renderer.topStackRow().join("");
                         renderer.popStackRow();
                         renderer.topStackRow().push(`<span class="${data.label.split("/")[1]}">${spanContent}</span>`);
                     }
@@ -235,7 +238,7 @@ class MainEpubModel extends ScriptureParaResultModel {
                         renderer.pushStackRow();
                         renderer.glossaryLemma = null;
                     } else {
-                        const spanContent = renderer.topStackRow().join("").trim();
+                        const spanContent = renderer.topStackRow().join("");
                         const spanKey = renderer.glossaryLemma || spanContent;
                         renderer.popStackRow();
                         renderer.topStackRow().push(spanContent);
@@ -243,6 +246,14 @@ class MainEpubModel extends ScriptureParaResultModel {
                         if (glossaryN) {
                             renderer.topStackRow().push(`<a class="glossaryLink" href="../GLO.xhtml#glo_${glossaryN}">*</a>`);
                         }
+                    }
+                },
+            },
+            {
+                test: (context, data) => data.label.startsWith("span"),
+                action: (renderer, context, data) => {
+                    if (data.itemType === "startScope") {
+                        renderer.report.unhandledSpans.add(data.label);
                     }
                 },
             },

@@ -29,6 +29,10 @@ const doMainEpubRender = (config, result) => {
     const model = new mainEpubRenderModel(result, config);
     model.render();
     console.log(`Main ePub rendered in  ${(Date.now() - ts) / 1000} sec`);
+    if (model.report.unhandledSpans.size > 0) {
+        console.log("Unhandled spans:")
+        Array.from(model.report.unhandledSpans).forEach(s => console.log(`   ${s}`));
+    }
 }
 
 const doRender = async (pk, config) => {
