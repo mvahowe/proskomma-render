@@ -102,7 +102,7 @@ class MainEpubModel extends ScriptureParaResultModel {
             {
                 test: context => ["title", "heading", "introduction"].includes(context.sequenceStack[0].blockGraft.subType),
                 action: (renderer, context, data) => {
-                    renderer.renderSequenceId(data.sequenceId);
+                    renderer.renderSequenceId(data.payload);
                 }
             }
         ];
@@ -116,7 +116,7 @@ class MainEpubModel extends ScriptureParaResultModel {
             {
                 test: context => context.sequenceStack[0].type === "title",
                 action: (renderer, context, data) => {
-                    const htmlClass = data.bs.label.split('/')[1];
+                    const htmlClass = data.bs.payload.split('/')[1];
                     const tag = ["mt"].includes(htmlClass) ? "h1" : "h2";
                     renderer.bodyHead.push(`<${tag} class="${htmlClass}">${renderer.topStackRow().join("").trim()}</${tag}>\n`);
                     renderer.popStackRow();
@@ -125,7 +125,7 @@ class MainEpubModel extends ScriptureParaResultModel {
             {
                 test: context => context.sequenceStack[0].type === "heading",
                 action: (renderer, context, data) => {
-                    const htmlClass = data.bs.label.split("/")[1];
+                    const htmlClass = data.bs.payload.split("/")[1];
                     let headingTag;
                     switch (htmlClass) {
                         case "s":
@@ -152,7 +152,7 @@ class MainEpubModel extends ScriptureParaResultModel {
             {
                 test: context => ["main", "introduction"].includes(context.sequenceStack[0].type),
                 action: (renderer, context, data) => {
-                    const htmlClass = data.bs.label.split("/")[1];
+                    const htmlClass = data.bs.payload.split("/")[1];
                     renderer.body.push(`<div class="${htmlClass}">${renderer.topStackRow().join("").trim()}</div>\n`);
                     renderer.popStackRow();
                 },
@@ -160,10 +160,10 @@ class MainEpubModel extends ScriptureParaResultModel {
         ];
         this.classActions.scope = [
             {
-                test: (context, data) => data.itemType === "startScope" && data.label.startsWith("chapter/") && context.document.headers.bookCode !== "GLO",
+                test: (context, data) => data.subType === 'start' && data.payload.startsWith("chapter/") && context.document.headers.bookCode !== "GLO",
                 action: (renderer, context, data) => {
                     this.chapter.waiting = true;
-                    const chapterLabel = data.label.split("/")[1];
+                    const chapterLabel = data.payload.split("/")[1];
                     this.chapter.c = chapterLabel;
                     this.chapter.cp = null;
                     this.chapter.ca = null;
@@ -171,41 +171,41 @@ class MainEpubModel extends ScriptureParaResultModel {
                 },
             },
             {
-                test: (context, data) => data.itemType === "startScope" && data.label.startsWith("pubChapter/") && context.document.headers.bookCode !== "GLO",
+                test: (context, data) => data.subType === "start" && data.payload.startsWith("pubChapter/") && context.document.headers.bookCode !== "GLO",
                 action: (renderer, context, data) => {
                     this.chapter.waiting = true;
-                    const chapterLabel = data.label.split("/")[1];
+                    const chapterLabel = data.payload.split("/")[1];
                     this.chapter.cp = chapterLabel;
                     this.chapter.cc++;
                 },
             },
             {
-                test: (context, data) => data.itemType === "startScope" && data.label.startsWith("verses/"),
+                test: (context, data) => data.subType === 'start' && data.payload.startsWith("verses/"),
                 action: (renderer, context, data) => {
                     this.verses.waiting = true;
-                    const verseLabel = data.label.split("/")[1];
+                    const verseLabel = data.payload.split("/")[1];
                     this.verses.v = verseLabel;
                     this.verses.vp = null;
                     this.verses.vc++;
                 },
             },
             {
-                test: (context, data) => data.itemType === "startScope" && data.label.startsWith("pubVerse/") && context.document.headers.bookCode !== "GLO",
+                test: (context, data) => data.subType === 'start' && data.payload.startsWith("pubVerse/") && context.document.headers.bookCode !== "GLO",
                 action: (renderer, context, data) => {
                     this.verses.waiting = true;
-                    const verseLabel = data.label.split("/")[1];
+                    const verseLabel = data.payload.split("/")[1];
                     this.verses.vp = verseLabel;
                     this.verses.vc++;
                 },
             },
             {
-                test: (context, data) => data.label.startsWith("attribute/spanWithAtts/w/lemma"),
+                test: (context, data) => data.payload.startsWith("attribute/spanWithAtts/w/lemma"),
                 action: (renderer, context, data) => {
-                    renderer.glossaryLemma = data.label.split("/")[5];
+                    renderer.glossaryLemma = data.payload.split("/")[5];
                 }
             },
             {
-                test: (context, data) => data.label === "span/k" && data.itemType === "endScope",
+                test: (context, data) => data.payload === "span/k" && data.subType === "end",
                 action: renderer => {
                     const spanContent = renderer.topStackRow().join("");
                     const spanKey = spanContent;
@@ -214,27 +214,27 @@ class MainEpubModel extends ScriptureParaResultModel {
                     if (glossaryN) {
                         renderer.topStackRow().push(`<span id="glo_${glossaryN}" class="k">${spanContent}</span>`);
                     } else {
-                        console.log(`No match for '${spanContent}`);
+                        console.log(`No match for '${spanContent}'`);
                         renderer.topStackRow().push(`<span class="k">${spanContent}</span>`);
                     }
                 },
             },
             {
-                test: (context, data) => data.label.startsWith("span") && ["bd", "bk", "dc", "em", "ft", "fq", "fqa", "fr", "fv", "it", "k", "ord", "pn", "qs", "sls", "tl", "wj", "xt"].includes(data.label.split("/")[1]),
+                test: (context, data) => data.payload.startsWith("span") && ["bd", "bk", "dc", "em", "ft", "fq", "fqa", "fr", "fv", "it", "k", "ord", "pn", "qs", "sls", "tl", "wj", "xt"].includes(data.payload.split("/")[1]),
                 action: (renderer, context, data) => {
-                    if (data.itemType === "startScope") {
+                    if (data.subType === "start") {
                         renderer.pushStackRow();
                     } else {
                         const spanContent = renderer.topStackRow().join("");
                         renderer.popStackRow();
-                        renderer.topStackRow().push(`<span class="${data.label.split("/")[1]}">${spanContent}</span>`);
+                        renderer.topStackRow().push(`<span class="${data.payload.split("/")[1]}">${spanContent}</span>`);
                     }
                 },
             },
             {
-                test: (context, data) => data.label === "spanWithAtts/w",
+                test: (context, data) => data.payload === "spanWithAtts/w",
                 action: (renderer, context, data) => {
-                    if (data.itemType === "startScope") {
+                    if (data.subType === "start") {
                         renderer.pushStackRow();
                         renderer.glossaryLemma = null;
                     } else {
@@ -250,10 +250,10 @@ class MainEpubModel extends ScriptureParaResultModel {
                 },
             },
             {
-                test: (context, data) => data.label.startsWith("span"),
+                test: (context, data) => data.payload.startsWith("span"),
                 action: (renderer, context, data) => {
-                    if (data.itemType === "startScope") {
-                        renderer.report.unhandledSpans.add(data.label);
+                    if (data.subType === "start") {
+                        renderer.report.unhandledSpans.add(data.payload);
                     }
                 },
             },
@@ -270,22 +270,22 @@ class MainEpubModel extends ScriptureParaResultModel {
                             this.maybeRenderChapter();
                             this.maybeRenderVerse();
                         }
-                        if ([";", "!", "?"].includes(data.chars)) {
+                        if ([";", "!", "?"].includes(data.payload)) {
                             if (renderer.topStackRow().length > 0) {
                                 let lastPushed = renderer.topStackRow().pop();
                                 lastPushed = lastPushed.replace(/ $/, "&#8239;");
                                 renderer.appendToTopStackRow(lastPushed);
                             }
-                            tokenString = data.chars;
-                        } else if ([":", "»"].includes(data.chars)) {
+                            tokenString = data.payload;
+                        } else if ([":", "»"].includes(data.payload)) {
                             if (renderer.topStackRow().length > 0) {
                                 let lastPushed = renderer.topStackRow().pop();
                                 lastPushed = lastPushed.replace(/ $/, "&#160;");
                                 renderer.appendToTopStackRow(lastPushed);
                             }
-                            tokenString = data.chars;
+                            tokenString = data.payload;
                         } else {
-                            tokenString = data.chars.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                            tokenString = data.payload.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                         }
                     }
                     return renderer.appendToTopStackRow(tokenString);
@@ -297,7 +297,7 @@ class MainEpubModel extends ScriptureParaResultModel {
                 test: (context, data) => data.subType === "footnote",
                 action: (renderer, context, data) => {
                     renderer.appendToTopStackRow(`<a id="footnote_anchor_${renderer.nextFootnote}" href="#footnote_${renderer.nextFootnote}" class="footnote_anchor">${renderer.nextFootnote}</a>`);
-                    renderer.renderSequenceId(data.sequenceId);
+                    renderer.renderSequenceId(data.payload);
                     renderer.nextFootnote++;
                 },
             }

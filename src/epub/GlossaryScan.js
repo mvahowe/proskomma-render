@@ -14,9 +14,9 @@ class GlossaryScan extends ScriptureParaResultModel {
 
         this.classActions.scope = [
             {
-                test: (context, data) => context.document.headers.bookCode === "GLO" && data.label === "span/k",
+                test: (context, data) => context.document.headers.bookCode === "GLO" && data.payload === "span/k",
                 action: (renderer, context, data) => {
-                    if (data.itemType === "startScope") {
+                    if (data.subType === "start") {
                         renderer.pushStackRow();
                         this.inK = true;
                     } else {
@@ -35,7 +35,7 @@ class GlossaryScan extends ScriptureParaResultModel {
             {
                 test: () => this.inK,
                 action: (renderer, context, data) => {
-                    const tokenString = data.chars.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    const tokenString = data.payload.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                     return renderer.appendToTopStackRow(tokenString);
                 }
             },

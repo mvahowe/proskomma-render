@@ -14,13 +14,9 @@ const doModelQuery = async pk => {
         '        type' +
 //        '        tags' +
         '        blocks {' +
-        '          bs {label}' +
-        '          bg {subType sequenceId}' +
-        '          items {' +
-        '            ... on Token { itemType subType chars }' +
-        '            ... on Scope { itemType label }' +
-        '            ... on Graft { itemType subType sequenceId }' +
-        '          }' +
+        '          bs { payload }' +
+        '          bg { subType payload }' +
+        '          items { type subType payload }' +
         '        }' +
         '      }' +
         '    }' +

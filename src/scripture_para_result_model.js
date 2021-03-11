@@ -103,7 +103,7 @@ class ScriptureParaResultModel {
     renderBlocks(blocks) {
         for (const [n, block] of blocks.entries()) {
             this.context.sequenceStack[0].block = {
-                blockScope: block.bs.label,
+                blockScope: block.bs.payload,
                 nBlockGrafts: block.bg.length,
                 nItems: block.items.length,
                 blockPos: n
@@ -135,12 +135,11 @@ class ScriptureParaResultModel {
     }
 
     renderItem(item) {
-        switch (item.itemType) {
+        switch (item.type) {
             case "token":
                 this.renderToken(item);
                 break;
-            case "startScope":
-            case "endScope":
+            case "scope":
                 this.renderScope(item);
                 break;
             case "graft":
@@ -205,12 +204,12 @@ class ScriptureParaResultModel {
     };
 
     renderScope(scope) {
-        if (scope.itemType === "startScope") {
-            this.context.sequenceStack[0].openScopes.add(scope.label);
+        if (scope.subType === "start") {
+            this.context.sequenceStack[0].openScopes.add(scope.payload);
         }
         this.applyClassActions(this.allActions.scope, scope);
-        if (scope.itemType === "endScope") {
-            this.context.sequenceStack[0].openScopes.delete(scope.label);
+        if (scope.subType === "end") {
+            this.context.sequenceStack[0].openScopes.delete(scope.payload);
         }
     };
 

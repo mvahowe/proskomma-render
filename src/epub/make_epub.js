@@ -3,7 +3,7 @@
 const fse = require('fs-extra');
 const path = require('path');
 
-const {ProsKomma} = require('proskomma');
+const {Proskomma} = require('proskomma');
 const doModelQuery = require('../model_query');
 const GlossaryScan = require('./GlossaryScan');
 const mainEpubRenderModel = require('./MainEpubModel');
@@ -57,7 +57,7 @@ if (!config.outputPath) {
 let ts = Date.now();
 let nBooks = 0;
 
-const pk = new ProsKomma();
+const pk = new Proskomma();
 const fqSourceDir = path.resolve(config.configRoot, config.sourceDir);
 for (const filePath of fse.readdirSync(fqSourceDir)) {
     if (bookMatches(filePath)) {
