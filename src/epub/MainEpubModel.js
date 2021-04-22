@@ -153,7 +153,11 @@ class MainEpubModel extends ScriptureParaResultModel {
                 test: context => ["main", "introduction"].includes(context.sequenceStack[0].type),
                 action: (renderer, context, data) => {
                     const htmlClass = data.bs.payload.split("/")[1];
-                    renderer.body.push(`<div class="${htmlClass}">${renderer.topStackRow().join("").trim()}</div>\n`);
+                    if (context.document.headers.bookCode !== "GLO") {
+                        renderer.body.push(`<aside epub:type="glossary">${renderer.topStackRow().join("").trim()}</aside>\n`);
+                    } else {
+                        renderer.body.push(`<div class="${htmlClass}">${renderer.topStackRow().join("").trim()}</div>\n`);
+                    }
                     renderer.popStackRow();
                 },
             },
@@ -244,7 +248,7 @@ class MainEpubModel extends ScriptureParaResultModel {
                         renderer.topStackRow().push(spanContent);
                         const glossaryN = renderer.config.glossaryTerms[spanKey];
                         if (glossaryN) {
-                            renderer.topStackRow().push(`<a class="glossaryLink" href="../GLO.xhtml#glo_${glossaryN}">*</a>`);
+                            renderer.topStackRow().push(`<a epub:type="noteRef" class="glossaryLink" href="../GLO.xhtml#glo_${glossaryN}">*</a>`);
                         }
                     }
                 },
@@ -296,7 +300,7 @@ class MainEpubModel extends ScriptureParaResultModel {
             {
                 test: (context, data) => data.subType === "footnote",
                 action: (renderer, context, data) => {
-                    renderer.appendToTopStackRow(`<a id="footnote_anchor_${renderer.nextFootnote}" href="#footnote_${renderer.nextFootnote}" class="footnote_anchor">${renderer.nextFootnote}</a>`);
+                    renderer.appendToTopStackRow(`<a epub:type="noteRef" id="footnote_anchor_${renderer.nextFootnote}" href="#footnote_${renderer.nextFootnote}" class="footnote_anchor">${renderer.nextFootnote}</a>`);
                     renderer.renderSequenceId(data.payload);
                     renderer.nextFootnote++;
                 },
@@ -315,18 +319,21 @@ class MainEpubModel extends ScriptureParaResultModel {
                                 `OEBPS/XHTML/${context.document.headers.bookCode}/${context.document.headers.bookCode}.xhtml` :
                                 "OEBPS/XHTML/GLO.xhtml",
                             [
-                                `<html xmlns="http://www.w3.org/1999/xhtml">\n<head>\n${renderer.head.join("")}\n</head>\n`,
+                                `<!DOCTYPE html>\n<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">\n<head>\n${renderer.head.join("")}\n</head>\n`,
                                 '<body id="top">\n',
                                 context.document.chapters.length > 0 ? `<div class="chapter_nav">${chapterLinks}</div>` : "",
-                                bodyHead,
-                                renderer.body.join(""),
+                                `<header>\n${bodyHead}\n</header>\n`,
+                                `<section>\n${renderer.body.join("")}\n</section>\n`,
                                 Object.keys(renderer.footnotes).length > 0 ?
-                                    `<h2 class="notes_title">${renderer.config.i18n.notes}</h2>\n` :
+                                    `<section>\n<h2 class="notes_title">${renderer.config.i18n.notes}</h2>\n` :
                                     "",
                                 Object.entries(renderer.footnotes)
                                     .map(fe =>
-                                        `<div class="footnote"><a id="footnote_${fe[0]}" href="#footnote_anchor_${fe[0]}" class="footnote_number">${fe[0]}</a>&#160;: ${fe[1].join("")}</div>\n`)
+                                        `<aside epub:type="footnote">\n<p><a id="footnote_${fe[0]}" href="#footnote_anchor_${fe[0]}" class="footnote_number">${fe[0]}</a>&#160;: ${fe[1].join("")}</p></aside>\n`)
                                     .join(""),
+                                Object.keys(renderer.footnotes).length > 0 ?
+                                    `</section>\n` :
+                                    "",
                                 '</body>\n</html>\n'
                             ].join("")
                         );
