@@ -87,7 +87,6 @@ class MainEpubModel extends ScriptureParaResultModel {
                         vp: null,
                         vc: 0
                     };
-
                     this.context.document.chapters = [];
                 }
             },
@@ -117,7 +116,7 @@ class MainEpubModel extends ScriptureParaResultModel {
                 test: context => context.sequenceStack[0].type === "title",
                 action: (renderer, context, data) => {
                     const htmlClass = data.bs.payload.split('/')[1];
-                    const tag = ["mt"].includes(htmlClass) ? "h1" : "h2";
+                    const tag = ["mt", "ms"].includes(htmlClass) ? "h1" : "h2";
                     renderer.bodyHead.push(`<${tag} class="${htmlClass}">${renderer.topStackRow().join("").trim()}</${tag}>\n`);
                     renderer.popStackRow();
                 },
@@ -300,7 +299,7 @@ class MainEpubModel extends ScriptureParaResultModel {
             {
                 test: (context, data) => data.subType === "footnote",
                 action: (renderer, context, data) => {
-                    renderer.appendToTopStackRow(`<a epub:type="noteRef" id="footnote_anchor_${renderer.nextFootnote}" href="#footnote_${renderer.nextFootnote}" class="footnote_anchor">${renderer.nextFootnote}</a>`);
+                    renderer.appendToTopStackRow(`<a epub:type="noteRef" id="footnote_anchor_${renderer.nextFootnote}" href="#footnote_${renderer.nextFootnote}" class="footnote_anchor"><sup>${renderer.nextFootnote}</sup></a>`);
                     renderer.renderSequenceId(data.payload);
                     renderer.nextFootnote++;
                 },
@@ -311,7 +310,7 @@ class MainEpubModel extends ScriptureParaResultModel {
                 test: context => context.sequenceStack[0].type === "main",
                 action: (renderer, context) => {
                     let chapterLinks = "<span class=\"chapter_link\"><a href=\"../toc.xhtml\">^</a></span>";
-                    chapterLinks += context.document.chapters.map(c => `<span class="chapter_link"><a href="#chapter_${c[0]}">${c[1]}</a></span>`).join("");
+                    chapterLinks += context.document.chapters.map(c => ` <span class="chapter_link"><a href="#chapter_${c[0]}">${c[1]}</a></span>`).join("");
                     let bodyHead = renderer.bodyHead.join("");
                     renderer.zip
                         .file(
@@ -338,7 +337,13 @@ class MainEpubModel extends ScriptureParaResultModel {
                             ].join("")
                         );
                 }
-            }
+            },
+            {
+                test: context => context.sequenceStack[0].type === "introduction",
+                action: renderer => {
+                    renderer.body.push("<hr/>\n");
+                }
+            },
         ];
         this.classActions.endDocSet = [
             {
@@ -395,7 +400,7 @@ class MainEpubModel extends ScriptureParaResultModel {
                 chapterId = `${chapterId}_${this.chapter.cc}`;
             }
             this.context.document.chapters.push([chapterId, chapterLabel]);
-            this.body.push(`<div id="chapter_${chapterId}" class="chapter"><a href="#top">${chapterLabel}</a></div>\n`);
+            this.body.push(`<h3 id="chapter_${chapterId}" class="chapter"><a href="#top">${chapterLabel}</a></h3>\n`);
             this.chapter.waiting = false;
         }
     }
@@ -410,4 +415,5 @@ class MainEpubModel extends ScriptureParaResultModel {
 
 }
 
-module.exports = MainEpubModel;
+module
+    .exports = MainEpubModel;
