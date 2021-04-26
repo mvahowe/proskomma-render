@@ -1,7 +1,7 @@
 {
   "sourceDir": "../../../../../sbf/nfc/usx",
-  "title": "La Nouvelle Bible Français Courant",
-  "coverImage": "../../../../../sbf/nfc/cover_ecu.jpg",
+  "title": "La Bible Nouvelle Français courant",
+  "coverImage": "../../../../../sbf/nfc/cover_ecu.png",
   "language": "fr",
   "uid": "NFC18",
   "books": [
