@@ -10,7 +10,7 @@
     "fs-extra": "^9.0.1",
     "jszip": "^3.6.0",
     "path": "^0.12.7",
-    "proskomma": "^0.4.19"
+    "proskomma": "^0.4.24"
   },
   "devDependencies": {
     "tap-nyc": "^1.0.3",
