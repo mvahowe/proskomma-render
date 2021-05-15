@@ -1,4 +1,4 @@
-class ScriptureParaResultModel {
+class ScriptureParaModel {
 
     constructor(result) {
         this.queryResult = result;
@@ -257,4 +257,4 @@ class ScriptureParaResultModel {
 
 }
 
-module.exports = ScriptureParaResultModel;
+module.exports = ScriptureParaModel;

@@ -6,7 +6,7 @@ const path = require('path');
 const {Proskomma} = require('proskomma');
 const doModelQuery = require('../model_query');
 const GlossaryScan = require('./GlossaryScan');
-const mainEpubRenderModel = require('./MainEpubModel');
+const { MainEpubModel, addActions } = require('./MainEpubModel');
 
 const bookMatches = str => {
     for (const book of config.books) {
@@ -26,7 +26,8 @@ const doGlossaryScan = (config, result) => {
 
 const doMainEpubRender = (config, result) => {
     ts = Date.now();
-    const model = new mainEpubRenderModel(result, config);
+    const model = new MainEpubModel(result, config);
+    addActions(model);
     model.render();
     console.log(`Main ePub rendered in  ${(Date.now() - ts) / 1000} sec`);
     if (model.report.unhandledSpans.size > 0) {

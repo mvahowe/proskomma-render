@@ -2,7 +2,7 @@ const fse = require('fs-extra');
 const path = require('path');
 const JSZip = require('jszip');
 
-const ScriptureParaResultModel = require('../ScriptureParaResultModel');
+const ScriptureParaResultModel = require('../ScriptureParaModel');
 
 class GlossaryScan extends ScriptureParaResultModel {
 
