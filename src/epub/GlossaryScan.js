@@ -11,16 +11,8 @@ class GlossaryScan extends ScriptureParaResultModel {
     }
 }
 
-const addAction = (modelInstance, actionType, test, action) => {
-    if (!(actionType in modelInstance.classActions)) {
-        throw new Error(`Unknown action type '${actionType}'`);
-    }
-    modelInstance.classActions[actionType].push({test, action});
-}
-
 const addActions = (modelInstance) => {
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'scope',
         (context, data) => context.document.headers.bookCode === "GLO" && data.payload === "span/k",
         (renderer, context, data) => {
@@ -38,8 +30,7 @@ const addActions = (modelInstance) => {
             }
         }
     );
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'token',
         context => context.inK,
         (renderer, context, data) => {

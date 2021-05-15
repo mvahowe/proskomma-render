@@ -58,16 +58,8 @@ class MainEpubModel extends ScriptureParaResultModel {
     }
 }
 
-const addAction = (modelInstance, actionType, test, action) => {
-    if (!(actionType in modelInstance.classActions)) {
-        throw new Error(`Unknown action type '${actionType}'`);
-    }
-    modelInstance.classActions[actionType].push({test, action});
-}
-
 const addActions = (modelInstance) => {
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'startDocSet',
         () => true,
         (renderer) => {
@@ -84,8 +76,7 @@ const addActions = (modelInstance) => {
             renderer.zip.file(`OEBPS/IMG/cover.${coverImageSuffix}`, fse.readFileSync(path.resolve(modelInstance.config.configRoot, coverImagePath)));
         }
     );
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'startDocument',
         () => true,
         (renderer, context) => {
@@ -124,28 +115,24 @@ const addActions = (modelInstance) => {
             modelInstance.context.document.chapters = [];
         }
     );
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'startSequence',
         context => context.sequenceStack[0].type === "main",
         (renderer, context) => renderer.head.push(`<title>${context.document.headers.h || "Vocabulaire"}</title>`),
     );
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'blockGraft',
         context => ["title", "heading", "introduction"].includes(context.sequenceStack[0].blockGraft.subType),
         (renderer, context, data) => {
             renderer.renderSequenceId(data.payload);
         }
     );
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'startBlock',
         context => true,
         renderer => renderer.pushStackRow(),
     );
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'endBlock',
         context => context.sequenceStack[0].type === "title",
         (renderer, context, data) => {
@@ -155,8 +142,7 @@ const addActions = (modelInstance) => {
             renderer.popStackRow();
         },
     );
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'endBlock',
         context => context.sequenceStack[0].type === "heading",
         (renderer, context, data) => {
@@ -174,8 +160,7 @@ const addActions = (modelInstance) => {
             renderer.popStackRow();
         },
     );
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'endBlock',
         context => context.sequenceStack[0].type === "footnote",
         (renderer, context, data) => {
@@ -186,8 +171,7 @@ const addActions = (modelInstance) => {
             modelInstance.footnotes[footnoteKey] = modelInstance.footnotes[footnoteKey].concat(renderer.topStackRow());
         },
     );
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'endBlock',
         context => ["main", "introduction"].includes(context.sequenceStack[0].type),
         (renderer, context, data) => {
@@ -200,8 +184,7 @@ const addActions = (modelInstance) => {
             renderer.popStackRow();
         },
     );
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'scope',
         (context, data) => data.subType === 'start' && data.payload.startsWith("chapter/") && context.document.headers.bookCode !== "GLO",
         (renderer, context, data) => {
@@ -214,8 +197,7 @@ const addActions = (modelInstance) => {
             modelInstance.chapter.cc++
         },
     );
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'scope',
         (context, data) => data.subType === "start" && data.payload.startsWith("pubChapter/") && context.document.headers.bookCode !== "GLO",
         (renderer, context, data) => {
@@ -225,8 +207,7 @@ const addActions = (modelInstance) => {
             modelInstance.chapter.cpc++;
         }
     );
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'scope',
         (context, data) => data.subType === 'start' && data.payload.startsWith("verses/"),
         (renderer, context, data) => {
@@ -237,8 +218,7 @@ const addActions = (modelInstance) => {
             modelInstance.verses.vc++;
         },
     );
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'scope',
         (context, data) => data.subType === 'start' && data.payload.startsWith("pubVerse/") && context.document.headers.bookCode !== "GLO",
         (renderer, context, data) => {
@@ -248,16 +228,14 @@ const addActions = (modelInstance) => {
             modelInstance.verses.vc++;
         }
     );
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'scope',
         (context, data) => data.payload.startsWith("attribute/spanWithAtts/w/lemma"),
         (renderer, context, data) => {
             renderer.glossaryLemma = data.payload.split("/")[5];
         }
     );
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'scope',
         (context, data) => data.payload === "span/k" && data.subType === "end",
         renderer => {
@@ -273,8 +251,7 @@ const addActions = (modelInstance) => {
             }
         }
     );
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'scope',
         (context, data) => data.payload.startsWith("span") && ["bd", "bk", "dc", "em", "ft", "fq", "fqa", "fr", "fv", "it", "k", "ord", "pn", "qs", "sls", "tl", "wj", "xt"].includes(data.payload.split("/")[1]),
         (renderer, context, data) => {
@@ -287,8 +264,7 @@ const addActions = (modelInstance) => {
             }
         }
     );
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'scope',
         (context, data) => data.payload === "spanWithAtts/w",
         (renderer, context, data) => {
@@ -307,8 +283,7 @@ const addActions = (modelInstance) => {
             }
         }
     );
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'scope',
         (context, data) => data.payload.startsWith("span"),
         (renderer, context, data) => {
@@ -317,8 +292,7 @@ const addActions = (modelInstance) => {
             }
         }
     );
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'token',
         () => true,
         (renderer, context, data) => {
@@ -351,8 +325,7 @@ const addActions = (modelInstance) => {
             return renderer.appendToTopStackRow(tokenString);
         }
     );
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'inlineGraft',
         (context, data) => data.subType === "footnote",
         (renderer, context, data) => {
@@ -361,8 +334,7 @@ const addActions = (modelInstance) => {
             renderer.nextFootnote++;
         }
     );
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'endSequence',
         context => context.sequenceStack[0].type === "main",
         (renderer, context) => {
@@ -399,16 +371,14 @@ const addActions = (modelInstance) => {
                 );
         }
     );
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'endSequence',
         context => context.sequenceStack[0].type === "introduction",
         renderer => {
             renderer.body.push("<hr/>\n");
         }
     );
-    addAction(
-        modelInstance,
+    modelInstance.addAction(
         'endDocSet',
         () => true,
         (renderer) => {

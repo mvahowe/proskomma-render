@@ -24,6 +24,13 @@ class ScriptureParaModel {
         this.allActions = {};
     }
 
+    addAction(actionType, test, action) {
+        if (!(actionType in this.classActions)) {
+            throw new Error(`Unknown action type '${actionType}'`);
+        }
+        this.classActions[actionType].push({test, action});
+    }
+
     applyClassActions(classActions, data) {
         for (const classAction of classActions) {
             if (classAction.test(this.context, data)) {
