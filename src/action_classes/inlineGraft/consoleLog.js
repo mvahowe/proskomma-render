@@ -6,7 +6,7 @@ module.exports = [
         },
         action: (renderer, context, data) => {
             process.stdout.write(` << ${data.subType} `);
-            renderer.renderSequenceId(data.sequenceId);
+            renderer.renderSequenceId(data.payload);
             process.stdout.write(`>> `);
         }
     }

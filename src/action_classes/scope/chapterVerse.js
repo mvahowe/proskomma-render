@@ -2,19 +2,19 @@ module.exports = [
 
     {
         test: (context, data) => {
-            return data.itemType=== "startScope" && data.label.startsWith("chapter");
+            return data.subType=== "start" && data.payload.startsWith("chapter");
         },
         action: (renderer, context, data) => {
-            process.stdout.write(`\n+ CH ${data.label.split("/")[1]} +\n`);
+            process.stdout.write(`\n+ CH ${data.payload.split("/")[1]} +\n`);
         }
     },
 
     {
         test: (context, data) => {
-            return data.itemType=== "startScope" && data.label.startsWith("verses");
+            return data.subType=== "start" && data.payload.startsWith("verses");
         },
         action: (renderer, context, data) => {
-            process.stdout.write(`[v${data.label.split("/")[1]}] `);
+            process.stdout.write(`[v${data.payload.split("/")[1]}] `);
         }
     }
 

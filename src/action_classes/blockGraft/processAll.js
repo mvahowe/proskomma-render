@@ -5,7 +5,7 @@ module.exports = [
             return true;
         },
         action: (renderer, context, data) => {
-            renderer.renderSequenceId(data.sequenceId);
+            renderer.renderSequenceId(data.payload);
         }
     }
 

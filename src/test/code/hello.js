@@ -2,7 +2,7 @@ const test = require('tape');
 
 const {pkWithDoc} = require('../lib/load');
 const doModelQuery = require('../../model_query');
-const ScriptureParaResultModel = require("../../ScriptureParaModel");
+const ScriptureParaModel = require("../../ScriptureParaModel");
 const tokenActions = require("../../action_classes/token/consoleLog");
 const blockGraftActions = require("../../action_classes/blockGraft/consoleLog");
 const inlineGraftActions = require("../../action_classes/inlineGraft/consoleLog");
@@ -20,7 +20,7 @@ const renderHeading = {
     },
     action: (renderer, context, data) => {
         process.stdout.write(`\n++ `);
-        renderer.renderSequenceId(data.sequenceId);
+        renderer.renderSequenceId(data.payload);
         process.stdout.write(` ++\n`);
     }
 }
@@ -39,7 +39,7 @@ test(
             t.plan(2);
             const result = await doModelQuery(pk);
             t.ok(result);
-            const model = new ScriptureParaResultModel(result);
+            const model = new ScriptureParaModel(result);
             t.ok(model);
             model.render({
                 actions: {

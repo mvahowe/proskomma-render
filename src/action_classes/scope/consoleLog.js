@@ -5,7 +5,7 @@ module.exports = [
             return true;
         },
         action: (renderer, context, data) => {
-            process.stdout.write(`[${data.itemType.replace("Scope", "")}, ${data.label}]`);
+            process.stdout.write(`[${data.subType}, ${data.payload}]`);
         }
     }
 

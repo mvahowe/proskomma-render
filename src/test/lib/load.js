@@ -1,7 +1,7 @@
 const fse = require('fs-extra');
 const path = require('path');
 
-const {ProsKomma} = require('proskomma');
+const {Proskomma} = require('proskomma');
 
 const pkWithDoc = (fp, selectors, options, customTags, emptyBlocks, tags) => {
     if (!options) {options = {}};
@@ -10,7 +10,7 @@ const pkWithDoc = (fp, selectors, options, customTags, emptyBlocks, tags) => {
     if (contentType === "xml") {
         contentType = "lexicon";
     }
-    const pk = new ProsKomma();
+    const pk = new Proskomma();
     const pkDoc = pk.importDocument(
         selectors,
         contentType,
@@ -41,7 +41,7 @@ const customPkWithDoc = (pkClass, fp, selectors, options) => {
 }
 
 const pkWithDocs = (contentSpecs) => {
-    const pk = new ProsKomma();
+    const pk = new Proskomma();
     for (const [fp, selectors] of contentSpecs) {
         const content = fse.readFileSync(path.resolve(__dirname, fp));
         let contentType = fp.split('.').pop();
@@ -84,7 +84,7 @@ const pkWithDocSetDocs = (fps, selectors, options) => {
     if (contentType === "xml") {
         contentType = "lexicon";
     }
-    const pk = new ProsKomma();
+    const pk = new Proskomma();
     const pkDocs = pk.importDocuments(
         selectors,
         contentType,

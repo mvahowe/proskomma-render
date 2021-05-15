@@ -5,7 +5,7 @@ module.exports = [
             return true;
         },
         action: (renderer, context, data) => {
-            process.stdout.write(data.chars);
+            process.stdout.write(data.payload);
         }
     }
 
