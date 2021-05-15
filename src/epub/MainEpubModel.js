@@ -33,6 +33,7 @@ class MainEpubModel extends ScriptureParaResultModel {
         this.report = {
             unhandledSpans: new Set(),
         }
+        addActions(this);
     }
 
     maybeRenderChapter() {
@@ -453,4 +454,4 @@ const addActions = (modelInstance) => {
     );
 }
 
-module.exports = {MainEpubModel, addActions};
+module.exports = MainEpubModel;
