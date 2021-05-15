@@ -60,7 +60,7 @@ class MainEpubModel extends ScriptureParaResultModel {
                         cssPath = "../CSS/styles.css";
                     }
                     this.head = [
-                        '<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/>\n',
+                        '<meta charset=\"utf-8\"/>\n',
                         `<link type="text/css" rel="stylesheet" href="${cssPath}" />\n`,
                     ];
                     this.body = [];
@@ -94,7 +94,7 @@ class MainEpubModel extends ScriptureParaResultModel {
         this.classActions.startSequence = [
             {
                 test: context => context.sequenceStack[0].type === "main",
-                action: (renderer, context) => renderer.head.push(`<title>${context.document.headers.h}</title>`),
+                action: (renderer, context) => renderer.head.push(`<title>${context.document.headers.h || "Vocabulaire"}</title>`),
             }
         ];
         this.classActions.blockGraft = [
@@ -152,8 +152,8 @@ class MainEpubModel extends ScriptureParaResultModel {
                 test: context => ["main", "introduction"].includes(context.sequenceStack[0].type),
                 action: (renderer, context, data) => {
                     const htmlClass = data.bs.payload.split("/")[1];
-                    if (context.document.headers.bookCode !== "GLO") {
-                        renderer.body.push(`<aside epub:type="glossary">${renderer.topStackRow().join("").trim()}</aside>\n`);
+                    if (context.document.headers.bookCode === "GLO") {
+                        renderer.body.push(`<dd><p>${renderer.topStackRow().join("").trim()}</p></dd>\n`);
                     } else {
                         renderer.body.push(`<div class="${htmlClass}">${renderer.topStackRow().join("").trim()}</div>\n`);
                     }
@@ -169,6 +169,7 @@ class MainEpubModel extends ScriptureParaResultModel {
                     const chapterLabel = data.payload.split("/")[1];
                     this.chapter.c = chapterLabel;
                     this.chapter.cp = null;
+                    this.chapter.cpc = 0;
                     this.chapter.ca = null;
                     this.chapter.cc++
                 },
@@ -179,7 +180,7 @@ class MainEpubModel extends ScriptureParaResultModel {
                     this.chapter.waiting = true;
                     const chapterLabel = data.payload.split("/")[1];
                     this.chapter.cp = chapterLabel;
-                    this.chapter.cc++;
+                    this.chapter.cpc++;
                 },
             },
             {
@@ -215,10 +216,10 @@ class MainEpubModel extends ScriptureParaResultModel {
                     renderer.popStackRow();
                     const glossaryN = renderer.config.glossaryTerms[spanKey];
                     if (glossaryN) {
-                        renderer.topStackRow().push(`<span id="glo_${glossaryN}" class="k">${spanContent}</span>`);
+                        renderer.body.push(`<dt id="glo_${glossaryN}" class="k" epub:type="glossdef"><dfn>${spanContent}</dfn></dt>`);
                     } else {
                         console.log(`No match for '${spanContent}'`);
-                        renderer.topStackRow().push(`<span class="k">${spanContent}</span>`);
+                        renderer.body.push(`<dt class="k"><dfn>${spanContent}</dfn></dt>`);
                     }
                 },
             },
@@ -299,7 +300,7 @@ class MainEpubModel extends ScriptureParaResultModel {
             {
                 test: (context, data) => data.subType === "footnote",
                 action: (renderer, context, data) => {
-                    renderer.appendToTopStackRow(`<a epub:type="noteRef" id="footnote_anchor_${renderer.nextFootnote}" href="#footnote_${renderer.nextFootnote}" class="footnote_anchor"><sup>${renderer.nextFootnote}</sup></a>`);
+                    renderer.appendToTopStackRow(`<a epub:type="noteref" id="footnote_anchor_${renderer.nextFootnote}" href="#footnote_${renderer.nextFootnote}" class="footnote_anchor"><sup>${renderer.nextFootnote}</sup></a>`);
                     renderer.renderSequenceId(data.payload);
                     renderer.nextFootnote++;
                 },
@@ -320,11 +321,15 @@ class MainEpubModel extends ScriptureParaResultModel {
                             [
                                 `<!DOCTYPE html>\n<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">\n<head>\n${renderer.head.join("")}\n</head>\n`,
                                 '<body id="top">\n',
-                                context.document.chapters.length > 0 ? `<div class="chapter_nav">${chapterLinks}</div>` : "",
+                                context.document.chapters.length > 0 ? `<div class="chapter_nav">${chapterLinks}</div>\n` : "",
                                 `<header>\n${bodyHead}\n</header>\n`,
-                                `<section>\n${renderer.body.join("")}\n</section>\n`,
+                                `<section epub:type="${context.document.headers.bookCode === "GLO" ? 'glossary' : 'bodymatter' }">\n`,
+                                context.document.headers.bookCode === "GLO" ? '<dl>\n' : '',
+                                renderer.body.join(""),
+                                context.document.headers.bookCode === "GLO" ? '</dl>\n' : '',
+                                `\n</section>\n`,
                                 Object.keys(renderer.footnotes).length > 0 ?
-                                    `<section>\n<h2 class="notes_title">${renderer.config.i18n.notes}</h2>\n` :
+                                    `<section epub:type="footnotes">\n<h2 class="notes_title">${renderer.config.i18n.notes}</h2>\n` :
                                     "",
                                 Object.entries(renderer.footnotes)
                                     .map(fe =>
@@ -396,8 +401,8 @@ class MainEpubModel extends ScriptureParaResultModel {
         if (this.chapter.waiting) {
             const chapterLabel = this.chapter.cp || this.chapter.c;
             let chapterId = this.chapter.c;
-            if (this.chapter.cc > 1) {
-                chapterId = `${chapterId}_${this.chapter.cc}`;
+            if (this.chapter.cpc > 0) {
+                chapterId = `${chapterId}_${this.chapter.cpc}`;
             }
             this.context.document.chapters.push([chapterId, chapterLabel]);
             this.body.push(`<h3 id="chapter_${chapterId}" class="chapter"><a href="#top">${chapterLabel}</a></h3>\n`);
