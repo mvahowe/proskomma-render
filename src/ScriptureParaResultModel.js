@@ -39,50 +39,62 @@ class ScriptureParaResultModel {
             this.allActions[action] = (renderSpec.actions[action] || []).concat(this.classActions[action]);
         }
         for (const docSet of this.queryResult.docSets) {
-            if (renderSpec.docSet && renderSpec.docSet !== docSet.id) {
-                continue;
-            }
-            this.context.docSet = {
-                id: docSet.id,
-                selectors: {},
-                tags: docSet.tags
-            }
-            for (const selector of docSet.selectors) {
-                this.context.docSet.selectors[selector.key] = selector.value;
-            }
-            this.renderStartDocSet(docSet);
-            for (const document of docSet.documents) {
-                if (renderSpec.document && renderSpec.document !== document.id) {
-                    continue;
-                }
-                this.context.document = {
-                    id: document.id,
-                    headers: {},
-                    tags: document.tags
-                };
-                for (const header of document.headers) {
-                    this.context.document.headers[header.key] = header.value;
-                }
-                this.renderStartDocument(document);
-                this.context.sequences = {};
-                for (const sequence of document.sequences) {
-                    this.context.sequences[sequence.id] = sequence;
-                    if (sequence.type === "main") {
-                        this.context.mainSequence = sequence;
-                    }
-                }
-                this.context.sequenceStack = [];
-                this.renderSequenceId(renderSpec.sequence || this.context.mainSequence.id);
-                delete this.context.sequenceStack;
-                delete this.context.mainSequence;
-                delete this.context.sequences;
-                this.renderEndDocument(document);
-                delete this.context.document;
-            }
-            this.renderEndDocSet(docSet);
-            delete this.context.docSet;
+            this.renderDocSet(docSet, renderSpec);
         }
         this.allActions = {};
+    }
+
+    renderDocSet(docSet, renderSpec) {
+        if (renderSpec.docSet && renderSpec.docSet !== docSet.id) {
+            return;
+        }
+        this.context.docSet = {
+            id: docSet.id,
+            selectors: {},
+            tags: docSet.tags
+        }
+        for (const selector of docSet.selectors) {
+            this.context.docSet.selectors[selector.key] = selector.value;
+        }
+        this.renderStartDocSet(docSet);
+        for (const document of docSet.documents) {
+            this.renderDocument(document, renderSpec);
+        }
+        this.renderEndDocSet(docSet);
+        delete this.context.docSet;
+    }
+
+    renderDocument(document, renderSpec) {
+        if (renderSpec.document && renderSpec.document !== document.id) {
+            return;
+        }
+        this.context.document = {
+            id: document.id,
+            headers: {},
+            tags: document.tags
+        };
+        for (const header of document.headers) {
+            this.context.document.headers[header.key] = header.value;
+        }
+        this.renderStartDocument(document);
+        this.renderSequences(document.sequences, renderSpec);
+        this.renderEndDocument(document);
+        delete this.context.document;
+    }
+
+    renderSequences(sequences, renderSpec) {
+        this.context.sequences = {};
+        for (const sequence of sequences) {
+            this.context.sequences[sequence.id] = sequence;
+            if (sequence.type === "main") {
+                this.context.mainSequence = sequence;
+            }
+        }
+        this.context.sequenceStack = [];
+        this.renderSequenceId(renderSpec.sequence || this.context.mainSequence.id);
+        delete this.context.sequenceStack;
+        delete this.context.mainSequence;
+        delete this.context.sequences;
     }
 
     renderSequenceId(sequenceId) {

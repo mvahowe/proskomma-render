@@ -3,7 +3,7 @@ const path = require('path');
 
 const {ProsKomma} = require('proskomma');
 const doModelQuery = require('../model_query');
-const renderModel = require('../scripture_para_result_model');
+const renderModel = require('../ScriptureParaResultModel');
 const tokenActions = require("../action_classes/token/consoleLog");
 
 const fp = process.argv[2];

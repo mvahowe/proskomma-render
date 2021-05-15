@@ -1,3 +1,3 @@
 module.exports = [
-    require('./src/scripture_para_result_model')
+    require('./src/ScriptureParaResultModel')
 ];

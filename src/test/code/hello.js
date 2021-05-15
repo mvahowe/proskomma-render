@@ -2,7 +2,7 @@ const test = require('tape');
 
 const {pkWithDoc} = require('../lib/load');
 const doModelQuery = require('../../model_query');
-const ScriptureParaResultModel = require("../../scripture_para_result_model");
+const ScriptureParaResultModel = require("../../ScriptureParaResultModel");
 const tokenActions = require("../../action_classes/token/consoleLog");
 const blockGraftActions = require("../../action_classes/blockGraft/consoleLog");
 const inlineGraftActions = require("../../action_classes/inlineGraft/consoleLog");
