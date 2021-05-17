@@ -21,7 +21,7 @@ const bookMatches = str => {
 const doGlossaryScan = (config, result) => {
     ts = Date.now();
     const model = new ScriptureParaModel(result, config);
-    model.docSetModel = new GlossaryScan(result, model.context, config);
+    model.addDocSetModel('default', new GlossaryScan(result, model.context, config));
     model.render();
     console.log(`Glossary Scan in  ${(Date.now() - ts) / 1000} sec`);
 }
@@ -29,12 +29,12 @@ const doGlossaryScan = (config, result) => {
 const doMainEpubRender = (config, result) => {
     ts = Date.now();
     const model = new ScriptureParaModel(result, config);
-    model.docSetModel = new MainEpubModel(result, model.context, config);
+    model.addDocSetModel('default', new MainEpubModel(result, model.context, config));
     model.render();
     console.log(`Main ePub rendered in  ${(Date.now() - ts) / 1000} sec`);
-    if (model.docSetModel.report.unhandledSpans.size > 0) {
+    if (model.docSetModels.default.report.unhandledSpans.size > 0) {
         console.log("Unhandled spans:")
-        Array.from(model.docSetModel.report.unhandledSpans).forEach(s => console.log(`   ${s}`));
+        Array.from(model.docSetModels.default.report.unhandledSpans).forEach(s => console.log(`   ${s}`));
     }
 }
 
