@@ -31,6 +31,7 @@ class ScriptureParaModel {
             throw new Error(`A docSet model called '${modelKey}' has already been added`);
         }
         this.docSetModels[modelKey] = model;
+        model.scriptureModel = this;
     }
 
     addAction(actionType, test, action) {
@@ -50,7 +51,11 @@ class ScriptureParaModel {
             if (renderSpec.docSet && renderSpec.docSet !== docSet.id) {
                 continue;
             }
-            this.docSetModels[this.modelForDocSet(docSet)].render(docSet, this.config, renderSpec);
+            const docSetKey = this.modelForDocSet(docSet);
+            if (!(docSetKey in this.docSetModels)) {
+                throw new Error(`Attempt to call unknown docSet model '${docSetKey}': maybe you forgot 'addDocSetModel()'?`);
+            }
+            this.docSetModels[docSetKey].render(docSet, this.config, renderSpec);
         }
         this.allActions = {};
     }

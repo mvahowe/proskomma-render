@@ -23,6 +23,7 @@ class ScriptureDocSet {
             endStackRow: [],
         };
         this.allActions = {};
+        this.scriptureModel = null;
     }
 
     addAction(actionType, test, action) {
