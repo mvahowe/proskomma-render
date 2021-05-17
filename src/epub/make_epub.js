@@ -7,6 +7,7 @@ const {Proskomma} = require('proskomma');
 const doModelQuery = require('../model_query');
 const GlossaryScan = require('./GlossaryScan');
 const MainEpubModel = require('./MainEpubModel');
+const ScriptureParaModel = require('../ScriptureParaModel');
 
 const bookMatches = str => {
     for (const book of config.books) {
@@ -19,19 +20,21 @@ const bookMatches = str => {
 
 const doGlossaryScan = (config, result) => {
     ts = Date.now();
-    const model = new GlossaryScan(result, config);
+    const model = new ScriptureParaModel(result, config);
+    model.docSetModel = new GlossaryScan(result, model.context, config);
     model.render();
     console.log(`Glossary Scan in  ${(Date.now() - ts) / 1000} sec`);
 }
 
 const doMainEpubRender = (config, result) => {
     ts = Date.now();
-    const model = new MainEpubModel(result, config);
+    const model = new ScriptureParaModel(result, config);
+    model.docSetModel = new MainEpubModel(result, model.context, config);
     model.render();
     console.log(`Main ePub rendered in  ${(Date.now() - ts) / 1000} sec`);
-    if (model.report.unhandledSpans.size > 0) {
+    if (model.docSetModel.report.unhandledSpans.size > 0) {
         console.log("Unhandled spans:")
-        Array.from(model.report.unhandledSpans).forEach(s => console.log(`   ${s}`));
+        Array.from(model.docSetModel.report.unhandledSpans).forEach(s => console.log(`   ${s}`));
     }
 }
 

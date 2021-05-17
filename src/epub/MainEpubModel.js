@@ -2,13 +2,12 @@ const fse = require('fs-extra');
 const path = require('path');
 const JSZip = require('jszip');
 
-const ScriptureParaResultModel = require('../ScriptureParaModel');
+const ScriptureDocSet = require('../ScriptureDocSet');
 
-class MainEpubModel extends ScriptureParaResultModel {
+class MainEpubModel extends ScriptureDocSet {
 
-    constructor(result, config) {
-        super(result);
-        this.config = config;
+    constructor(result, context, config) {
+        super(result, context, config);
         this.head = [];
         this.bodyHead = [];
         this.body = [];

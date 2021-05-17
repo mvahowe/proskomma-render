@@ -1,9 +1,9 @@
-const ScriptureParaResultModel = require('../ScriptureParaModel');
+const ScriptureDocSet = require('../ScriptureDocSet');
 
-class GlossaryScan extends ScriptureParaResultModel {
+class GlossaryScan extends ScriptureDocSet {
 
-    constructor(result, config) {
-        super(result);
+    constructor(result, context, config) {
+        super(result, context, config);
         this.config = config;
         this.config.glossaryTerms = {};
         this.inK = false;
