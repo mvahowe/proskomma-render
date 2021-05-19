@@ -1,18 +1,20 @@
 const ScriptureDocSet = require('../ScriptureDocSet');
+const ScriptureDocument = require('../ScriptureDocument');
 
-class GlossaryScan extends ScriptureDocSet {
+class GlossaryScanDocSet extends ScriptureDocSet {
 
     constructor(result, context, config) {
         super(result, context, config);
-        this.config = config;
         this.config.glossaryTerms = {};
         this.inK = false;
         addActions(this);
     }
 }
 
-const addActions = (modelInstance) => {
-    modelInstance.addAction(
+const addActions = (dsInstance) => {
+    const dInstance = new ScriptureDocument(dsInstance.result, dsInstance.context, dsInstance.config);
+    dsInstance.addDocumentModel('default', dInstance);
+    dInstance.addAction(
         'scope',
         (context, data) => context.document.headers.bookCode === "GLO" && data.payload === "span/k",
         (renderer, context, data) => {
@@ -30,7 +32,7 @@ const addActions = (modelInstance) => {
             }
         }
     );
-    modelInstance.addAction(
+    dInstance.addAction(
         'token',
         context => context.inK,
         (renderer, context, data) => {
@@ -39,4 +41,4 @@ const addActions = (modelInstance) => {
         }
     );
 }
-module.exports = GlossaryScan;
+module.exports = GlossaryScanDocSet;

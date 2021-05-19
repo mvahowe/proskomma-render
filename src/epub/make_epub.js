@@ -5,8 +5,8 @@ const path = require('path');
 
 const {Proskomma} = require('proskomma');
 const doModelQuery = require('../model_query');
-const GlossaryScan = require('./GlossaryScan');
-const MainEpubModel = require('./MainEpubModel');
+const GlossaryScanDocSet = require('./GlossaryScanDocSet');
+const MainEpubDocSet = require('./MainEpubDocSet');
 const ScriptureParaModel = require('../ScriptureParaModel');
 
 const bookMatches = str => {
@@ -21,7 +21,7 @@ const bookMatches = str => {
 const doGlossaryScan = (config, result) => {
     ts = Date.now();
     const model = new ScriptureParaModel(result, config);
-    model.addDocSetModel('default', new GlossaryScan(result, model.context, config));
+    model.addDocSetModel('default', new GlossaryScanDocSet(result, model.context, config));
     model.render();
     console.log(`Glossary Scan in  ${(Date.now() - ts) / 1000} sec`);
     console.log(model.logString());
@@ -30,7 +30,7 @@ const doGlossaryScan = (config, result) => {
 const doMainEpubRender = (config, result) => {
     ts = Date.now();
     const model = new ScriptureParaModel(result, config);
-    model.addDocSetModel('default', new MainEpubModel(result, model.context, config));
+    model.addDocSetModel('default', new MainEpubDocSet(result, model.context, config));
     model.render();
     console.log(`Main ePub rendered in  ${(Date.now() - ts) / 1000} sec`);
     console.log(model.logString());

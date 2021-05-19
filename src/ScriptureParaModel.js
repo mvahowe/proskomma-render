@@ -5,7 +5,7 @@ class ScriptureParaModel {
         this.config = config;
         this.context = {};
         this.docSetModels = {};
-        this.classActionKeys = new Set([
+        this.delegatedActionKeys = new Set([
             'startDocSet',
             'endDocSet',
             'startDocument',
@@ -41,7 +41,7 @@ class ScriptureParaModel {
     }
 
     addAction(actionType, test, action) {
-        if (!(this.classActionKeys.has(actionType))) {
+        if (!(this.delegatedActionKeys.has(actionType))) {
             throw new Error(`Unknown action type '${actionType}'`);
         }
         this.docSetModels.default.addAction(actionType, test, action);

@@ -1,10 +1,6 @@
-const fse = require('fs-extra');
-const path = require('path');
-const JSZip = require('jszip');
+const ScriptureDocument = require('../ScriptureDocument');
 
-const ScriptureDocSet = require('../ScriptureDocSet');
-
-class MainEpubModel extends ScriptureDocSet {
+class MainEpubDocument extends ScriptureDocument {
 
     constructor(result, context, config) {
         super(result, context, config);
@@ -13,8 +9,6 @@ class MainEpubModel extends ScriptureDocSet {
         this.body = [];
         this.footnotes = {};
         this.nextFootnote = 1;
-        this.zip = null;
-        this.bookTitles = {};
         this.glossaryLemma = null;
         this.chapter = {
             waiting: false,
@@ -29,9 +23,6 @@ class MainEpubModel extends ScriptureDocSet {
             vp: null,
             va: null
         };
-        this.report = {
-            unhandledSpans: new Set(),
-        }
         addActions(this);
     }
 
@@ -57,25 +48,8 @@ class MainEpubModel extends ScriptureDocSet {
     }
 }
 
-const addActions = (modelInstance) => {
-    modelInstance.addAction(
-        'startDocSet',
-        () => true,
-        (renderer) => {
-            renderer.bookTitles = {};
-            renderer.zip = new JSZip();
-            renderer.zip.file("mimetype", "application/epub+zip");
-            renderer.zip.file("META-INF/container.xml", fse.readFileSync(path.resolve(modelInstance.config.codeRoot, 'resources/container.xml')));
-            renderer.zip.file("OEBPS/CSS/styles.css", fse.readFileSync(path.resolve(modelInstance.config.codeRoot, 'resources/styles.css')));
-            const coverImagePath = modelInstance.config.coverImage ?
-                path.resolve(modelInstance.config.configRoot, modelInstance.config.coverImage) :
-                path.resolve(modelInstance.config.codeRoot, 'resources/cover.png');
-            const coverImageSuffix = coverImagePath.split("/").reverse()[0].split(".")[1];
-            modelInstance.config.coverImageSuffix = coverImageSuffix;
-            renderer.zip.file(`OEBPS/IMG/cover.${coverImageSuffix}`, fse.readFileSync(path.resolve(modelInstance.config.configRoot, coverImagePath)));
-        }
-    );
-    modelInstance.addAction(
+const addActions = (dInstance) => {
+    dInstance.addAction(
         'startDocument',
         () => true,
         (renderer, context) => {
@@ -83,55 +57,55 @@ const addActions = (modelInstance) => {
             if (context.document.headers.bookCode === "GLO") {
                 cssPath = "../CSS/styles.css";
             }
-            modelInstance.head = [
+            dInstance.head = [
                 '<meta charset=\"utf-8\"/>\n',
                 `<link type="text/css" rel="stylesheet" href="${cssPath}" />\n`,
             ];
-            modelInstance.body = [];
-            modelInstance.bodyHead = [];
-            modelInstance.footnotes = {};
-            modelInstance.nextFootnote = 1;
+            dInstance.body = [];
+            dInstance.bodyHead = [];
+            dInstance.footnotes = {};
+            dInstance.nextFootnote = 1;
             if (context.document.headers.bookCode !== "GLO") {
-                modelInstance.bookTitles[context.document.headers.bookCode] = [
+                dInstance.docSetModel.bookTitles[context.document.headers.bookCode] = [
                     context.document.headers.h,
                     context.document.headers.toc,
                     context.document.headers.toc2,
                     context.document.headers.toc3,
                 ];
             }
-            modelInstance.chapter = {
+            dInstance.chapter = {
                 waiting: false,
                 c: null,
                 cp: null,
                 cc: 0
             };
-            modelInstance.verses = {
+            dInstance.verses = {
                 waiting: false,
                 v: null,
                 vp: null,
                 vc: 0
             };
-            modelInstance.context.document.chapters = [];
+            dInstance.context.document.chapters = [];
         }
     );
-    modelInstance.addAction(
+    dInstance.addAction(
         'startSequence',
         context => context.sequenceStack[0].type === "main",
         (renderer, context) => renderer.head.push(`<title>${context.document.headers.h || "Vocabulaire"}</title>`),
     );
-    modelInstance.addAction(
+    dInstance.addAction(
         'blockGraft',
         context => ["title", "heading", "introduction"].includes(context.sequenceStack[0].blockGraft.subType),
         (renderer, context, data) => {
             renderer.renderSequenceId(data.payload);
         }
     );
-    modelInstance.addAction(
+    dInstance.addAction(
         'startBlock',
         context => true,
         renderer => renderer.pushStackRow(),
     );
-    modelInstance.addAction(
+    dInstance.addAction(
         'endBlock',
         context => context.sequenceStack[0].type === "title",
         (renderer, context, data) => {
@@ -141,7 +115,7 @@ const addActions = (modelInstance) => {
             renderer.popStackRow();
         },
     );
-    modelInstance.addAction(
+    dInstance.addAction(
         'endBlock',
         context => context.sequenceStack[0].type === "heading",
         (renderer, context, data) => {
@@ -159,18 +133,18 @@ const addActions = (modelInstance) => {
             renderer.popStackRow();
         },
     );
-    modelInstance.addAction(
+    dInstance.addAction(
         'endBlock',
         context => context.sequenceStack[0].type === "footnote",
         (renderer, context, data) => {
             const footnoteKey = renderer.nextFootnote.toString();
-            if (!(footnoteKey in modelInstance.footnotes)) {
-                modelInstance.footnotes[footnoteKey] = [];
+            if (!(footnoteKey in dInstance.footnotes)) {
+                dInstance.footnotes[footnoteKey] = [];
             }
-            modelInstance.footnotes[footnoteKey] = modelInstance.footnotes[footnoteKey].concat(renderer.topStackRow());
+            dInstance.footnotes[footnoteKey] = dInstance.footnotes[footnoteKey].concat(renderer.topStackRow());
         },
     );
-    modelInstance.addAction(
+    dInstance.addAction(
         'endBlock',
         context => ["main", "introduction"].includes(context.sequenceStack[0].type),
         (renderer, context, data) => {
@@ -183,58 +157,58 @@ const addActions = (modelInstance) => {
             renderer.popStackRow();
         },
     );
-    modelInstance.addAction(
+    dInstance.addAction(
         'scope',
         (context, data) => data.subType === 'start' && data.payload.startsWith("chapter/") && context.document.headers.bookCode !== "GLO",
         (renderer, context, data) => {
-            modelInstance.chapter.waiting = true;
+            dInstance.chapter.waiting = true;
             const chapterLabel = data.payload.split("/")[1];
-            modelInstance.chapter.c = chapterLabel;
-            modelInstance.chapter.cp = null;
-            modelInstance.chapter.cpc = 0;
-            modelInstance.chapter.ca = null;
-            modelInstance.chapter.cc++
+            dInstance.chapter.c = chapterLabel;
+            dInstance.chapter.cp = null;
+            dInstance.chapter.cpc = 0;
+            dInstance.chapter.ca = null;
+            dInstance.chapter.cc++
         },
     );
-    modelInstance.addAction(
+    dInstance.addAction(
         'scope',
         (context, data) => data.subType === "start" && data.payload.startsWith("pubChapter/") && context.document.headers.bookCode !== "GLO",
         (renderer, context, data) => {
-            modelInstance.chapter.waiting = true;
+            dInstance.chapter.waiting = true;
             const chapterLabel = data.payload.split("/")[1];
-            modelInstance.chapter.cp = chapterLabel;
-            modelInstance.chapter.cpc++;
+            dInstance.chapter.cp = chapterLabel;
+            dInstance.chapter.cpc++;
         }
     );
-    modelInstance.addAction(
+    dInstance.addAction(
         'scope',
         (context, data) => data.subType === 'start' && data.payload.startsWith("verses/"),
         (renderer, context, data) => {
-            modelInstance.verses.waiting = true;
+            dInstance.verses.waiting = true;
             const verseLabel = data.payload.split("/")[1];
-            modelInstance.verses.v = verseLabel;
-            modelInstance.verses.vp = null;
-            modelInstance.verses.vc++;
+            dInstance.verses.v = verseLabel;
+            dInstance.verses.vp = null;
+            dInstance.verses.vc++;
         },
     );
-    modelInstance.addAction(
+    dInstance.addAction(
         'scope',
         (context, data) => data.subType === 'start' && data.payload.startsWith("pubVerse/") && context.document.headers.bookCode !== "GLO",
         (renderer, context, data) => {
-            modelInstance.verses.waiting = true;
+            dInstance.verses.waiting = true;
             const verseLabel = data.payload.split("/")[1];
-            modelInstance.verses.vp = verseLabel;
-            modelInstance.verses.vc++;
+            dInstance.verses.vp = verseLabel;
+            dInstance.verses.vc++;
         }
     );
-    modelInstance.addAction(
+    dInstance.addAction(
         'scope',
         (context, data) => data.payload.startsWith("attribute/spanWithAtts/w/lemma"),
         (renderer, context, data) => {
             renderer.glossaryLemma = data.payload.split("/")[5];
         }
     );
-    modelInstance.addAction(
+    dInstance.addAction(
         'scope',
         (context, data) => data.payload === "span/k" && data.subType === "end",
         renderer => {
@@ -250,7 +224,7 @@ const addActions = (modelInstance) => {
             }
         }
     );
-    modelInstance.addAction(
+    dInstance.addAction(
         'scope',
         (context, data) => data.payload.startsWith("span") && ["bd", "bk", "dc", "em", "ft", "fq", "fqa", "fr", "fv", "it", "k", "ord", "pn", "qs", "sls", "tl", "wj", "xt"].includes(data.payload.split("/")[1]),
         (renderer, context, data) => {
@@ -263,7 +237,7 @@ const addActions = (modelInstance) => {
             }
         }
     );
-    modelInstance.addAction(
+    dInstance.addAction(
         'scope',
         (context, data) => data.payload === "spanWithAtts/w",
         (renderer, context, data) => {
@@ -282,16 +256,16 @@ const addActions = (modelInstance) => {
             }
         }
     );
-    modelInstance.addAction(
+    dInstance.addAction(
         'scope',
         (context, data) => data.payload.startsWith("span"),
         (renderer, context, data) => {
             if (data.subType === "start") {
-                modelInstance.writeLogEntry('Warning', `Unhandled span '${data.payload}'`)
+                dInstance.writeLogEntry('Warning', `Unhandled span '${data.payload}'`)
             }
         }
     );
-    modelInstance.addAction(
+    dInstance.addAction(
         'token',
         () => true,
         (renderer, context, data) => {
@@ -300,8 +274,8 @@ const addActions = (modelInstance) => {
                 tokenString = " ";
             } else {
                 if (context.sequenceStack[0].type === "main") {
-                    modelInstance.maybeRenderChapter();
-                    modelInstance.maybeRenderVerse();
+                    dInstance.maybeRenderChapter();
+                    dInstance.maybeRenderVerse();
                 }
                 if ([";", "!", "?"].includes(data.payload)) {
                     if (renderer.topStackRow().length > 0) {
@@ -324,7 +298,7 @@ const addActions = (modelInstance) => {
             return renderer.appendToTopStackRow(tokenString);
         }
     );
-    modelInstance.addAction(
+    dInstance.addAction(
         'inlineGraft',
         (context, data) => data.subType === "footnote",
         (renderer, context, data) => {
@@ -333,14 +307,14 @@ const addActions = (modelInstance) => {
             renderer.nextFootnote++;
         }
     );
-    modelInstance.addAction(
+    dInstance.addAction(
         'endSequence',
         context => context.sequenceStack[0].type === "main",
         (renderer, context) => {
             let chapterLinks = "<span class=\"chapter_link\"><a href=\"../toc.xhtml\">^</a></span>";
             chapterLinks += context.document.chapters.map(c => ` <span class="chapter_link"><a href="#chapter_${c[0]}">${c[1]}</a></span>`).join("");
             let bodyHead = renderer.bodyHead.join("");
-            renderer.zip
+            renderer.docSetModel.zip
                 .file(
                     context.document.headers.bookCode !== "GLO" ?
                         `OEBPS/XHTML/${context.document.headers.bookCode}/${context.document.headers.bookCode}.xhtml` :
@@ -370,57 +344,13 @@ const addActions = (modelInstance) => {
                 );
         }
     );
-    modelInstance.addAction(
+    dInstance.addAction(
         'endSequence',
         context => context.sequenceStack[0].type === "introduction",
         renderer => {
             renderer.body.push("<hr/>\n");
         }
     );
-    modelInstance.addAction(
-        'endDocSet',
-        () => true,
-        (renderer) => {
-            const canonicalBooks = renderer.config.books.filter(b => b in renderer.bookTitles);
-            let opf = fse.readFileSync(path.resolve(renderer.config.codeRoot, 'resources/content.opf'), 'utf8');
-            opf = opf.replace(/%title%/g, renderer.config.title);
-            opf = opf.replace(/%uid%/g, renderer.config.uid);
-            opf = opf.replace(/%language%/g, renderer.config.language);
-            opf = opf.replace(/%timestamp%/g, new Date().toISOString().replace(/\.\d+Z/g, "Z"));
-            opf = opf.replace(/%coverImageSuffix%/g, renderer.config.coverImageSuffix);
-            opf = opf.replace(/%coverImageMimetype%/g, renderer.config.coverImageSuffix === "png" ? "image/png" : "image/jpeg");
-            let spineContent = canonicalBooks.map(b => `<itemref idref="body_${b}" />\n`).join("");
-            if (renderer.config.books.includes("GLO")) {
-                spineContent = spineContent.concat(`<itemref idref="body_GLO" />\n`);
-            }
-            opf = opf.replace(/%spine%/g, spineContent);
-            let manifestContent = canonicalBooks.map(b => `<item id="body_${b}" href="../OEBPS/XHTML/${b}/${b}.xhtml" media-type="application/xhtml+xml" />`).join("");
-            if (renderer.config.books.includes("GLO")) {
-                manifestContent = manifestContent.concat(`<item id="body_GLO" href="../OEBPS/XHTML/GLO.xhtml" media-type="application/xhtml+xml" />`);
-            }
-            opf = opf.replace(/%book_manifest_items%/g, manifestContent);
-            renderer.zip.file("OEBPS/content.opf", opf);
-            let title = fse.readFileSync(path.resolve(renderer.config.codeRoot, 'resources/title.xhtml'), 'utf8');
-            title = title.replace(/%titlePage%/g, renderer.config.i18n.titlePage);
-            title = title.replace(/%copyright%/g, renderer.config.i18n.copyright);
-            title = title.replace(/%coverAlt%/g, renderer.config.i18n.coverAlt);
-            title = title.replace(/%coverImageSuffix%/g, renderer.config.coverImageSuffix);
-            renderer.zip.file("OEBPS/XHTML/title.xhtml", title);
-            let toc = fse.readFileSync(path.resolve(renderer.config.codeRoot, 'resources/toc.xhtml'), 'utf8');
-            let tocContent = canonicalBooks
-                .map(
-                    b => `<li><a href="${b}/${b}.xhtml">${renderer.bookTitles[b][2]}</a></li>\n`
-                );
-            if (renderer.config.books.includes("GLO")) {
-                tocContent.push(`<li><a href="GLO.xhtml">${renderer.config.i18n.glossary}</a></li>\n`);
-            }
-            toc = toc.replace(/%contentLinks%/g, tocContent.join(""));
-            toc = toc.replace(/%toc_books%/g, renderer.config.i18n.tocBooks)
-            renderer.zip.file("OEBPS/XHTML/toc.xhtml", toc);
-            renderer.zip.generateNodeStream({type: "nodebuffer", streamFiles: true})
-                .pipe(fse.createWriteStream(renderer.config.outputPath));
-        }
-    );
 }
 
-module.exports = MainEpubModel;
+module.exports = MainEpubDocument;
