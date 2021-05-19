@@ -24,6 +24,15 @@ class ScriptureDocSet {
         };
         this.allActions = {};
         this.scriptureModel = null;
+        this.key = null;
+    }
+
+    writeLogEntry(level, msg) {
+        this.scriptureModel.log.push({
+            component: `docSet${this.key === 'default' ? '' : `:${this.key}`}`,
+            level,
+            msg,
+        })
     }
 
     addAction(actionType, test, action) {

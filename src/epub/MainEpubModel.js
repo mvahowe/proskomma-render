@@ -287,7 +287,7 @@ const addActions = (modelInstance) => {
         (context, data) => data.payload.startsWith("span"),
         (renderer, context, data) => {
             if (data.subType === "start") {
-                renderer.report.unhandledSpans.add(data.payload);
+                modelInstance.writeLogEntry('Warning', `Unhandled span '${data.payload}'`)
             }
         }
     );

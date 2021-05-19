@@ -24,6 +24,7 @@ const doGlossaryScan = (config, result) => {
     model.addDocSetModel('default', new GlossaryScan(result, model.context, config));
     model.render();
     console.log(`Glossary Scan in  ${(Date.now() - ts) / 1000} sec`);
+    console.log(model.logString());
 }
 
 const doMainEpubRender = (config, result) => {
@@ -32,10 +33,7 @@ const doMainEpubRender = (config, result) => {
     model.addDocSetModel('default', new MainEpubModel(result, model.context, config));
     model.render();
     console.log(`Main ePub rendered in  ${(Date.now() - ts) / 1000} sec`);
-    if (model.docSetModels.default.report.unhandledSpans.size > 0) {
-        console.log("Unhandled spans:")
-        Array.from(model.docSetModels.default.report.unhandledSpans).forEach(s => console.log(`   ${s}`));
-    }
+    console.log(model.logString());
 }
 
 const doRender = async (pk, config) => {

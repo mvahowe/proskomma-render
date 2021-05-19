@@ -24,6 +24,11 @@ class ScriptureParaModel {
             'endStackRow',
         ]);
         this.allActions = {};
+        this.log = [];
+    }
+
+    logString() {
+        return this.log.map(l => `${l.level} from ${l.component}: ${l.msg}`).join('\n');
     }
 
     addDocSetModel(modelKey, model) {
@@ -32,6 +37,7 @@ class ScriptureParaModel {
         }
         this.docSetModels[modelKey] = model;
         model.scriptureModel = this;
+        model.key = modelKey;
     }
 
     addAction(actionType, test, action) {
