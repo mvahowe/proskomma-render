@@ -107,6 +107,35 @@ const addActions = (dInstance) => {
                         '</body>\n</html>\n'
                     ].join("")
                 );
+            renderer.docSetModel.zip
+                .file(
+                    "OEBPS/XHTML/glossary_notes.xhtml",
+                    [
+                        `<!DOCTYPE html>\n<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">\n<head>\n${renderer.head.join("")}\n</head>\n`,
+                        '<body id="top">\n',
+                        `<header>\n${bodyHead}\n</header>\n`,
+                        `<section epub:type="endnotes">\n`,
+                        `<h1 class="mt">${renderer.config.i18n.glossary}</h1>\n`,
+                        renderer.config.glossaryAsides
+                            .sort((a, b) => {
+                                const removeAccents = str =>
+                                    str
+                                        .replace(/É/g, 'E')
+                                        .replace(/Œ/g, 'Oe')
+                                const a2 = removeAccents(a.terms[0]);
+                                const b2 = removeAccents(b.terms[0]);
+                                if (a2 === b2) {
+                                    return 0;
+                                } else if (a2 > b2) {
+                                    return 1;
+                                }
+                                return -1;
+                            })
+                            .map(as => `<aside epub:type="footnote" class="" id="glo_${as.n}">\n<h4>${as.terms.join(', ')}</h4>\n${as.content.map(asl => `<p>${asl}</p>\n`).join('')}</aside>\n`).join(''),
+                            `</section>\n`,
+                        '</body>\n</html>\n'
+                    ].join("")
+                );
         }
     );
 }

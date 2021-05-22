@@ -11,7 +11,6 @@ class CanonicalDocument extends ScriptureDocument {
         this.footnotes = {};
         this.nextFootnote = 1;
         this.glossaryLemma = null;
-        this.usedGlossaryNumbers = new Set([]);
         this.chapter = {
             waiting: false,
             c: null,
@@ -222,8 +221,7 @@ const addActions = (dInstance) => {
                 renderer.topStackRow().push(spanContent);
                 const glossaryN = renderer.config.glossaryTerms[spanKey];
                 if (glossaryN) {
-                    renderer.topStackRow().push(`<a epub:type="noteRef" class="glossaryLink" href="../GLO.xhtml#glo_${glossaryN}">*</a>`);
-                    renderer.usedGlossaryNumbers.add(renderer.config.glossaryNToAside[glossaryN]);
+                    renderer.topStackRow().push(`<a epub:type="noteref" class="glossaryLink" href="../glossary_notes.xhtml#glo_${renderer.config.glossaryNToAside[glossaryN]}">*</a>`);
                 }
             }
         }
@@ -282,23 +280,6 @@ const addActions = (dInstance) => {
             let chapterLinks = "<span class=\"chapter_link\"><a href=\"../toc.xhtml\">^</a></span>";
             chapterLinks += context.document.chapters.map(c => ` <span class="chapter_link"><a href="#chapter_${c[0]}">${c[1]}</a></span>`).join("");
             let bodyHead = renderer.bodyHead.join("");
-            [...renderer.usedGlossaryNumbers]
-                .map(gn => renderer.config.glossaryAsides[gn])
-                .sort((a, b) => {
-                    const removeAccents = str =>
-                        str
-                            .replace(/É/g, 'E')
-                            .replace(/Œ/g, 'Oe')
-                    const a2 = removeAccents(a.terms[0]);
-                    const b2 = removeAccents(b.terms[0]);
-                    if (a2 === b2) {
-                        return 0;
-                    } else if (a2 > b2) {
-                        return 1;
-                    }
-                    return -1;
-                })
-                .forEach(as => console.log(as))
             renderer.docSetModel.zip
                 .file(
                     `OEBPS/XHTML/${context.document.headers.bookCode}/${context.document.headers.bookCode}.xhtml`,
