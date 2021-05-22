@@ -6,7 +6,7 @@ const path = require('path');
 const {Proskomma} = require('proskomma');
 const doModelQuery = require('../model_query');
 const GlossaryScanDocSet = require('./GlossaryScanDocSet');
-const MainEpubDocSet = require('./MainDocSet');
+const MainDocSet = require('./MainDocSet');
 const ScriptureParaModel = require('../ScriptureParaModel');
 
 const bookMatches = str => {
@@ -30,20 +30,20 @@ const doGlossaryScan = (config, result) => {
 const doMainEpubRender = (config, result) => {
     ts = Date.now();
     const model = new ScriptureParaModel(result, config);
-    model.addDocSetModel('default', new MainEpubDocSet(result, model.context, config));
+    model.addDocSetModel('default', new MainDocSet(result, model.context, config));
     model.render();
     console.log(`Main ePub rendered in  ${(Date.now() - ts) / 1000} sec`);
     console.log(model.logString());
 }
 
 const doRender = async (pk, config) => {
+    const thenFunction = result => {
+        console.log(`Query processed in  ${(Date.now() - ts) / 1000} sec`);
+        doGlossaryScan(config, result);
+        doMainEpubRender(config, result);
+    }
     await doModelQuery(pk)
-        .then(result => {
-                console.log(`Query processed in  ${(Date.now() - ts) / 1000} sec`);
-                doGlossaryScan(config, result);
-                doMainEpubRender(config, result);
-            }
-        )
+        .then(thenFunction)
 };
 
 const configPath = path.resolve(__dirname, process.argv[2]);

@@ -229,7 +229,39 @@ const addActions = (dInstance) => {
     // Unhandled scope
     dInstance.addAction(...sharedActions.unhandledScope);
     // Tokens, including attempt to add French spaces and half-spaces after punctuation
-    dInstance.addAction(...sharedActions.token);
+    dInstance.addAction(
+        'token',
+        () => true,
+        (renderer, context, data) => {
+            let tokenString;
+            if (["lineSpace", "eol"].includes(data.subType)) {
+                tokenString = " ";
+            } else {
+                if (context.sequenceStack[0].type === "main") {
+                    dInstance.maybeRenderChapter();
+                    dInstance.maybeRenderVerse();
+                }
+                if ([";", "!", "?"].includes(data.payload)) {
+                    if (renderer.topStackRow().length > 0) {
+                        let lastPushed = renderer.topStackRow().pop();
+                        lastPushed = lastPushed.replace(/ $/, "&#8239;");
+                        renderer.appendToTopStackRow(lastPushed);
+                    }
+                    tokenString = data.payload;
+                } else if ([":", "»"].includes(data.payload)) {
+                    if (renderer.topStackRow().length > 0) {
+                        let lastPushed = renderer.topStackRow().pop();
+                        lastPushed = lastPushed.replace(/ $/, "&#160;");
+                        renderer.appendToTopStackRow(lastPushed);
+                    }
+                    tokenString = data.payload;
+                } else {
+                    tokenString = data.payload.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                }
+            }
+            return renderer.appendToTopStackRow(tokenString);
+        }
+    ),
     // Add footnote link, then process the footnote sequence
     dInstance.addAction(
         'inlineGraft',

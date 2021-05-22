@@ -80,7 +80,12 @@ class ScriptureDocSet {
             this.context.docSet.selectors[selector.key] = selector.value;
         }
         this.renderStartDocSet(docSet);
-        for (const document of docSet.documents) {
+        let documents = docSet.documents;
+        const gloDocument = documents.filter(d => d.headers.filter(dh => dh.key === 'bookCode' && dh.value === 'GLO').length > 0);
+        if (gloDocument) {
+            documents = [gloDocument[0], ...documents.filter(d => d.id !== gloDocument[0].id)];
+        }
+        for (const document of documents) {
             if (renderSpec.document && renderSpec.document !== document.id) {
                 continue;
             }

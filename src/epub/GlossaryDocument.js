@@ -8,6 +8,8 @@ class GlossaryDocument extends ScriptureDocument {
         this.head = [];
         this.bodyHead = [];
         this.body = [];
+        this.glossaryTerm = null;
+        this.glossaryN = null;
         addActions(this);
     }
 }
@@ -18,6 +20,7 @@ const addActions = (dInstance) => {
         'startDocument',
         () => true,
         renderer => {
+            renderer.config.glossaryAsides = {};
             let cssPath = "../CSS/styles.css";
             dInstance.head = [
                 '<meta charset=\"utf-8\"/>\n',
@@ -30,29 +33,36 @@ const addActions = (dInstance) => {
     );
     // Start new stack row for new block
     dInstance.addAction(...sharedActions.startBlock);
-    // Push rendered stack row content to body, then pop row
+    // Push rendered stack row content to glossary body, store content for page links, then pop row
     dInstance.addAction(
         'endBlock',
         context => context.sequenceStack[0].type === 'main',
-        (renderer, context, data) => {
-            renderer.body.push(`<dd><p>${renderer.topStackRow().join("").trim()}</p></dd>\n`);
+        renderer => {
+            const glossContent = renderer.topStackRow().join("").trim();
+            renderer.body.push(`<dd><p>${glossContent}</p></dd>\n`);
+            renderer.config.glossaryAsides[renderer.glossaryTerm] = {
+                number: renderer.glossaryN,
+                content: glossContent,
+            };
             renderer.popStackRow();
         },
     );
-    // End of a glossary term: check it's indexed, then render the term HTML directly
+    // End of a glossary term: check it's indexed,
+    // then render the term to the glossary page directly
     dInstance.addAction(
         'scope',
         (context, data) => data.payload === "span/k" && data.subType === "end",
         renderer => {
-            const spanContent = renderer.topStackRow().join("");
-            const spanKey = spanContent;
+            renderer.glossaryTerm = renderer.topStackRow().join("");
             renderer.popStackRow();
-            const glossaryN = renderer.config.glossaryTerms[spanKey];
-            if (glossaryN) {
-                renderer.body.push(`<dt id="glo_${glossaryN}" class="k" epub:type="glossdef"><dfn>${spanContent}</dfn></dt>`);
+            renderer.glossaryN = renderer.config.glossaryTerms[renderer.glossaryTerm];
+            if (renderer.glossaryN) {
+                renderer.body.push(`<dt id="glo_${renderer.glossaryN}" class="k" epub:type="glossdef"><dfn>${renderer.glossaryTerm}</dfn></dt>`);
             } else {
-                console.log(`No match for '${spanContent}'`);
-                renderer.body.push(`<dt class="k"><dfn>${spanContent}</dfn></dt>`);
+                console.log(`No match for '${renderer.glossaryTerm}'`);
+                renderer.body.push(`<dt class="k"><dfn>${renderer.glossaryTerm}</dfn></dt>`);
+                renderer.glossaryN = null;
+                renderer.glossaryTerm = null;
             }
         }
     );
@@ -76,7 +86,7 @@ const addActions = (dInstance) => {
                         '<body id="top">\n',
                         `<header>\n${bodyHead}\n</header>\n`,
                         `<section epub:type="glossary">\n`,
-                        `<h1>${renderer.config.i18n.glossary}</h1>\n`,
+                        `<h1 class="mt">${renderer.config.i18n.glossary}</h1>\n`,
                         '<dl>\n',
                         renderer.body.join(""),
                         '</dl>\n',
