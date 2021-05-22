@@ -6,7 +6,7 @@ const path = require('path');
 const {Proskomma} = require('proskomma');
 const doModelQuery = require('../model_query');
 const GlossaryScanDocSet = require('./GlossaryScanDocSet');
-const MainEpubDocSet = require('./MainEpubDocSet');
+const MainEpubDocSet = require('./MainDocSet');
 const ScriptureParaModel = require('../ScriptureParaModel');
 
 const bookMatches = str => {

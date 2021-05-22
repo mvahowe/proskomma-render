@@ -3,10 +3,10 @@ const path = require('path');
 const JSZip = require('jszip');
 
 const ScriptureDocSet = require('../ScriptureDocSet');
-const MainEpubDocument = require('./MainEpubDocument');
-const GlossaryEpubDocument = require('./GlossaryEpubDocument');
+const MainEpubDocument = require('./CanonicalDocument');
+const GlossaryEpubDocument = require('./GlossaryDocument');
 
-class MainEpubDocSet extends ScriptureDocSet {
+class MainDocSet extends ScriptureDocSet {
 
     constructor(result, context, config) {
         super(result, context, config);
@@ -94,4 +94,4 @@ const addActions = (dsInstance) => {
     );
 }
 
-module.exports = MainEpubDocSet;
+module.exports = MainDocSet;

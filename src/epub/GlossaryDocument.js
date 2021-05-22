@@ -1,6 +1,7 @@
 const ScriptureDocument = require('../ScriptureDocument');
+const sharedActions = require('./shared_actions');
 
-class GlossaryEpubDocument extends ScriptureDocument {
+class GlossaryDocument extends ScriptureDocument {
 
     constructor(result, context, config) {
         super(result, context, config);
@@ -28,11 +29,7 @@ const addActions = (dInstance) => {
         }
     );
     // Start new stack row for new block
-    dInstance.addAction(
-        'startBlock',
-        () => true,
-        renderer => renderer.pushStackRow(),
-    );
+    dInstance.addAction(...sharedActions.startBlock);
     // Push rendered stack row content to body, then pop row
     dInstance.addAction(
         'endBlock',
@@ -59,60 +56,12 @@ const addActions = (dInstance) => {
             }
         }
     );
-    // Character markup - open or close an element
-    dInstance.addAction(
-        'scope',
-        (context, data) => data.payload.startsWith("span") && ["bd", "bk", "dc", "em", "ft", "fq", "fqa", "fr", "fv", "it", "k", "ord", "pn", "qs", "sls", "tl", "wj", "xt"].includes(data.payload.split("/")[1]),
-        (renderer, context, data) => {
-            if (data.subType === "start") {
-                renderer.pushStackRow();
-            } else {
-                const spanContent = renderer.topStackRow().join("");
-                renderer.popStackRow();
-                renderer.topStackRow().push(`<span class="${data.payload.split("/")[1]}">${spanContent}</span>`);
-            }
-        }
-    );
+    // Character markup
+    dInstance.addAction(...sharedActions.characterScope);
     // Unhandled scope
-    dInstance.addAction(
-        'scope',
-        (context, data) => data.payload.startsWith("span"),
-        (renderer, context, data) => {
-            if (data.subType === "start") {
-                dInstance.writeLogEntry('Warning', `Unhandled span '${data.payload}'`)
-            }
-        }
-    );
+    dInstance.addAction(...sharedActions.unhandledScope);
     // Tokens, including attempt to add French spaces and half-spaces after punctuation
-    dInstance.addAction(
-        'token',
-        () => true,
-        (renderer, context, data) => {
-            let tokenString;
-            if (["lineSpace", "eol"].includes(data.subType)) {
-                tokenString = " ";
-            } else {
-                if ([";", "!", "?"].includes(data.payload)) {
-                    if (renderer.topStackRow().length > 0) {
-                        let lastPushed = renderer.topStackRow().pop();
-                        lastPushed = lastPushed.replace(/ $/, "&#8239;");
-                        renderer.appendToTopStackRow(lastPushed);
-                    }
-                    tokenString = data.payload;
-                } else if ([":", "»"].includes(data.payload)) {
-                    if (renderer.topStackRow().length > 0) {
-                        let lastPushed = renderer.topStackRow().pop();
-                        lastPushed = lastPushed.replace(/ $/, "&#160;");
-                        renderer.appendToTopStackRow(lastPushed);
-                    }
-                    tokenString = data.payload;
-                } else {
-                    tokenString = data.payload.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                }
-            }
-            return renderer.appendToTopStackRow(tokenString);
-        }
-    );
+    dInstance.addAction(...sharedActions.token);
     // Build the HTML document
     dInstance.addAction(
         'endSequence',
@@ -139,4 +88,4 @@ const addActions = (dInstance) => {
     );
 }
 
-module.exports = GlossaryEpubDocument;
+module.exports = GlossaryDocument;
