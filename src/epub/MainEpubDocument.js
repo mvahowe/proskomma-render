@@ -54,9 +54,6 @@ const addActions = (dInstance) => {
         () => true,
         (renderer, context) => {
             let cssPath = "../../CSS/styles.css";
-            if (context.document.headers.bookCode === "GLO") {
-                cssPath = "../CSS/styles.css";
-            }
             dInstance.head = [
                 '<meta charset=\"utf-8\"/>\n',
                 `<link type="text/css" rel="stylesheet" href="${cssPath}" />\n`,
@@ -65,14 +62,12 @@ const addActions = (dInstance) => {
             dInstance.bodyHead = [];
             dInstance.footnotes = {};
             dInstance.nextFootnote = 1;
-            if (context.document.headers.bookCode !== "GLO") {
-                dInstance.docSetModel.bookTitles[context.document.headers.bookCode] = [
-                    context.document.headers.h,
-                    context.document.headers.toc,
-                    context.document.headers.toc2,
-                    context.document.headers.toc3,
-                ];
-            }
+            dInstance.docSetModel.bookTitles[context.document.headers.bookCode] = [
+                context.document.headers.h,
+                context.document.headers.toc,
+                context.document.headers.toc2,
+                context.document.headers.toc3,
+            ];
             dInstance.chapter = {
                 waiting: false,
                 c: null,
@@ -149,17 +144,13 @@ const addActions = (dInstance) => {
         context => ["main", "introduction"].includes(context.sequenceStack[0].type),
         (renderer, context, data) => {
             const htmlClass = data.bs.payload.split("/")[1];
-            if (context.document.headers.bookCode === "GLO") {
-                renderer.body.push(`<dd><p>${renderer.topStackRow().join("").trim()}</p></dd>\n`);
-            } else {
-                renderer.body.push(`<div class="${htmlClass}">${renderer.topStackRow().join("").trim()}</div>\n`);
-            }
+            renderer.body.push(`<div class="${htmlClass}">${renderer.topStackRow().join("").trim()}</div>\n`);
             renderer.popStackRow();
         },
     );
     dInstance.addAction(
         'scope',
-        (context, data) => data.subType === 'start' && data.payload.startsWith("chapter/") && context.document.headers.bookCode !== "GLO",
+        (context, data) => data.subType === 'start' && data.payload.startsWith("chapter/"),
         (renderer, context, data) => {
             dInstance.chapter.waiting = true;
             const chapterLabel = data.payload.split("/")[1];
@@ -172,7 +163,7 @@ const addActions = (dInstance) => {
     );
     dInstance.addAction(
         'scope',
-        (context, data) => data.subType === "start" && data.payload.startsWith("pubChapter/") && context.document.headers.bookCode !== "GLO",
+        (context, data) => data.subType === "start" && data.payload.startsWith("pubChapter/"),
         (renderer, context, data) => {
             dInstance.chapter.waiting = true;
             const chapterLabel = data.payload.split("/")[1];
@@ -193,7 +184,7 @@ const addActions = (dInstance) => {
     );
     dInstance.addAction(
         'scope',
-        (context, data) => data.subType === 'start' && data.payload.startsWith("pubVerse/") && context.document.headers.bookCode !== "GLO",
+        (context, data) => data.subType === 'start' && data.payload.startsWith("pubVerse/"),
         (renderer, context, data) => {
             dInstance.verses.waiting = true;
             const verseLabel = data.payload.split("/")[1];
@@ -206,22 +197,6 @@ const addActions = (dInstance) => {
         (context, data) => data.payload.startsWith("attribute/spanWithAtts/w/lemma"),
         (renderer, context, data) => {
             renderer.glossaryLemma = data.payload.split("/")[5];
-        }
-    );
-    dInstance.addAction(
-        'scope',
-        (context, data) => data.payload === "span/k" && data.subType === "end",
-        renderer => {
-            const spanContent = renderer.topStackRow().join("");
-            const spanKey = spanContent;
-            renderer.popStackRow();
-            const glossaryN = renderer.config.glossaryTerms[spanKey];
-            if (glossaryN) {
-                renderer.body.push(`<dt id="glo_${glossaryN}" class="k" epub:type="glossdef"><dfn>${spanContent}</dfn></dt>`);
-            } else {
-                console.log(`No match for '${spanContent}'`);
-                renderer.body.push(`<dt class="k"><dfn>${spanContent}</dfn></dt>`);
-            }
         }
     );
     dInstance.addAction(
@@ -316,18 +291,14 @@ const addActions = (dInstance) => {
             let bodyHead = renderer.bodyHead.join("");
             renderer.docSetModel.zip
                 .file(
-                    context.document.headers.bookCode !== "GLO" ?
-                        `OEBPS/XHTML/${context.document.headers.bookCode}/${context.document.headers.bookCode}.xhtml` :
-                        "OEBPS/XHTML/GLO.xhtml",
+                    `OEBPS/XHTML/${context.document.headers.bookCode}/${context.document.headers.bookCode}.xhtml`,
                     [
                         `<!DOCTYPE html>\n<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">\n<head>\n${renderer.head.join("")}\n</head>\n`,
                         '<body id="top">\n',
                         context.document.chapters.length > 0 ? `<div class="chapter_nav">${chapterLinks}</div>\n` : "",
                         `<header>\n${bodyHead}\n</header>\n`,
-                        `<section epub:type="${context.document.headers.bookCode === "GLO" ? 'glossary' : 'bodymatter'}">\n`,
-                        context.document.headers.bookCode === "GLO" ? '<dl>\n' : '',
+                        `<section epub:type="bodymatter">\n`,
                         renderer.body.join(""),
-                        context.document.headers.bookCode === "GLO" ? '</dl>\n' : '',
                         `\n</section>\n`,
                         Object.keys(renderer.footnotes).length > 0 ?
                             `<section epub:type="footnotes">\n<h2 class="notes_title">${renderer.config.i18n.notes}</h2>\n` :

@@ -83,7 +83,7 @@
     "REV",
     "GLO"
   ],
-  "books": ["MRK", "1JN", "2JN", "3JN", "JUD", "GLO"],
+  "books": ["GLO", "MRK", "1JN", "2JN", "3JN", "JUD"],
   "i18n": {
     "notes": "Notes de pied de page",
     "tocBooks": "Table des matières",

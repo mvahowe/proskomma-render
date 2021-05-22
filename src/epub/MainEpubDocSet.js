@@ -4,6 +4,7 @@ const JSZip = require('jszip');
 
 const ScriptureDocSet = require('../ScriptureDocSet');
 const MainEpubDocument = require('./MainEpubDocument');
+const GlossaryEpubDocument = require('./GlossaryEpubDocument');
 
 class MainEpubDocSet extends ScriptureDocSet {
 
@@ -14,11 +15,22 @@ class MainEpubDocSet extends ScriptureDocSet {
         this.glossaryLemma = null;
         addActions(this);
     }
+
+    modelForDocument(document) {
+        const bookCode = document.headers.filter(h => h.key === 'bookCode')[0];
+        if (bookCode && bookCode.value === 'GLO') {
+            return 'glossary';
+        } else {
+            return 'default';
+        }
+    }
 }
 
 const addActions = (dsInstance) => {
     const dInstance = new MainEpubDocument(dsInstance.result, dsInstance.context, dsInstance.config);
+    const gDInstance = new GlossaryEpubDocument(dsInstance.result, dsInstance.context, dsInstance.config);
     dsInstance.addDocumentModel('default', dInstance);
+    dsInstance.addDocumentModel('glossary', gDInstance);
     dsInstance.addAction(
         'startDocSet',
         () => true,
