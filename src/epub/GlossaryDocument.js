@@ -8,8 +8,8 @@ class GlossaryDocument extends ScriptureDocument {
         this.head = [];
         this.bodyHead = [];
         this.body = [];
-        this.glossaryTerm = null;
-        this.glossaryN = null;
+        this.glossaryTerms = [];
+        this.glossaryNs = [];
         addActions(this);
     }
 }
@@ -20,7 +20,8 @@ const addActions = (dInstance) => {
         'startDocument',
         () => true,
         renderer => {
-            renderer.config.glossaryAsides = {};
+            renderer.config.glossaryAsides = [];
+            renderer.config.glossaryNToAside = {};
             let cssPath = "../CSS/styles.css";
             dInstance.head = [
                 '<meta charset=\"utf-8\"/>\n',
@@ -38,13 +39,25 @@ const addActions = (dInstance) => {
         'endBlock',
         context => context.sequenceStack[0].type === 'main',
         renderer => {
-            const glossContent = renderer.topStackRow().join("").trim();
+            const glossContent = renderer.topStackRow().join("")
+                .trim()
+                .replace(/^[\s,]+/g, '');
             renderer.body.push(`<dd><p>${glossContent}</p></dd>\n`);
-            renderer.config.glossaryAsides[renderer.glossaryTerm] = {
-                number: renderer.glossaryN,
-                content: glossContent,
-            };
+            const nAsides = renderer.config.glossaryAsides.length;
+            if (renderer.glossaryNs.length > 0) {
+                renderer.config.glossaryAsides.push({
+                    n: nAsides,
+                    numbers: renderer.glossaryNs,
+                    terms: renderer.glossaryTerms,
+                    content: [glossContent],
+                });
+            } else {
+                renderer.config.glossaryAsides[nAsides - 1].content.push(glossContent);
+            }
+            renderer.glossaryNs.forEach(n => renderer.config.glossaryNToAside[n] = nAsides);
             renderer.popStackRow();
+            renderer.glossaryNs = [];
+            renderer.glossaryTerms = [];
         },
     );
     // End of a glossary term: check it's indexed,
@@ -53,16 +66,16 @@ const addActions = (dInstance) => {
         'scope',
         (context, data) => data.payload === "span/k" && data.subType === "end",
         renderer => {
-            renderer.glossaryTerm = renderer.topStackRow().join("");
+            const glossaryTerm = renderer.topStackRow().join("");
             renderer.popStackRow();
-            renderer.glossaryN = renderer.config.glossaryTerms[renderer.glossaryTerm];
-            if (renderer.glossaryN) {
-                renderer.body.push(`<dt id="glo_${renderer.glossaryN}" class="k" epub:type="glossdef"><dfn>${renderer.glossaryTerm}</dfn></dt>`);
+            const glossaryN = renderer.config.glossaryTerms[glossaryTerm];
+            if (glossaryN) {
+                renderer.body.push(`<dt id="glo_${glossaryN}" class="k" epub:type="glossdef"><dfn>${glossaryTerm}</dfn></dt>`);
+                renderer.glossaryNs.push(glossaryN);
+                renderer.glossaryTerms.push(glossaryTerm);
             } else {
-                console.log(`No match for '${renderer.glossaryTerm}'`);
-                renderer.body.push(`<dt class="k"><dfn>${renderer.glossaryTerm}</dfn></dt>`);
-                renderer.glossaryN = null;
-                renderer.glossaryTerm = null;
+                console.log(`No match for '${glossaryTerm}'`);
+                renderer.body.push(`<dt class="k"><dfn>${glossaryTerm}</dfn></dt>`);
             }
         }
     );
