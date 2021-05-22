@@ -7,85 +7,42 @@ class GlossaryEpubDocument extends ScriptureDocument {
         this.head = [];
         this.bodyHead = [];
         this.body = [];
-        this.footnotes = {};
-        this.nextFootnote = 1;
-        this.glossaryLemma = null;
-        this.chapter = {
-            waiting: false,
-            c: null,
-            cp: null,
-            ca: null,
-            cc: 0
-        };
-        this.verses = {
-            waiting: false,
-            v: null,
-            vp: null,
-            va: null
-        };
         addActions(this);
     }
 }
 
 const addActions = (dInstance) => {
+    // Initialize headers
     dInstance.addAction(
         'startDocument',
         () => true,
-        (renderer, context) => {
+        renderer => {
             let cssPath = "../CSS/styles.css";
             dInstance.head = [
                 '<meta charset=\"utf-8\"/>\n',
                 `<link type="text/css" rel="stylesheet" href="${cssPath}" />\n`,
+                `<title>${renderer.config.i18n.glossary}</title>`,
             ];
             dInstance.body = [];
             dInstance.bodyHead = [];
-            dInstance.footnotes = {};
-            dInstance.nextFootnote = 1;
-            dInstance.chapter = {
-                waiting: false,
-                c: null,
-                cp: null,
-                cc: 0
-            };
-            dInstance.verses = {
-                waiting: false,
-                v: null,
-                vp: null,
-                vc: 0
-            };
-            dInstance.context.document.chapters = [];
         }
     );
-    dInstance.addAction(
-        'startSequence',
-        context => context.sequenceStack[0].type === "main",
-        (renderer, context) => renderer.head.push(`<title>"Vocabulaire"</title>`),
-    );
+    // Start new stack row for new block
     dInstance.addAction(
         'startBlock',
-        context => true,
+        () => true,
         renderer => renderer.pushStackRow(),
     );
+    // Push rendered stack row content to body, then pop row
     dInstance.addAction(
         'endBlock',
-        context => ["main", "introduction"].includes(context.sequenceStack[0].type),
+        context => context.sequenceStack[0].type === 'main',
         (renderer, context, data) => {
-            const htmlClass = data.bs.payload.split("/")[1];
-            if (context.document.headers.bookCode === "GLO") {
-                renderer.body.push(`<dd><p>${renderer.topStackRow().join("").trim()}</p></dd>\n`);
-            } else {
-                renderer.body.push(`<div class="${htmlClass}">${renderer.topStackRow().join("").trim()}</div>\n`);
-            }
+            renderer.body.push(`<dd><p>${renderer.topStackRow().join("").trim()}</p></dd>\n`);
             renderer.popStackRow();
         },
     );
-    dInstance.addAction(
-        'scope',
-        (context, data) => data.payload.startsWith("attribute/spanWithAtts/w/lemma"),
-        (renderer, context, data) => {
-            renderer.glossaryLemma = data.payload.split("/")[5];
-        }
-    );
+    // End of a glossary term: check it's indexed, then render the term HTML directly
     dInstance.addAction(
         'scope',
         (context, data) => data.payload === "span/k" && data.subType === "end",
@@ -102,6 +59,7 @@ const addActions = (dInstance) => {
             }
         }
     );
+    // Character markup - open or close an element
     dInstance.addAction(
         'scope',
         (context, data) => data.payload.startsWith("span") && ["bd", "bk", "dc", "em", "ft", "fq", "fqa", "fr", "fv", "it", "k", "ord", "pn", "qs", "sls", "tl", "wj", "xt"].includes(data.payload.split("/")[1]),
@@ -115,25 +73,7 @@ const addActions = (dInstance) => {
             }
         }
     );
-    dInstance.addAction(
-        'scope',
-        (context, data) => data.payload === "spanWithAtts/w",
-        (renderer, context, data) => {
-            if (data.subType === "start") {
-                renderer.pushStackRow();
-                renderer.glossaryLemma = null;
-            } else {
-                const spanContent = renderer.topStackRow().join("");
-                const spanKey = renderer.glossaryLemma || spanContent;
-                renderer.popStackRow();
-                renderer.topStackRow().push(spanContent);
-                const glossaryN = renderer.config.glossaryTerms[spanKey];
-                if (glossaryN) {
-                    renderer.topStackRow().push(`<a epub:type="noteRef" class="glossaryLink" href="../GLO.xhtml#glo_${glossaryN}">*</a>`);
-                }
-            }
-        }
-    );
+    // Unhandled scope
     dInstance.addAction(
         'scope',
         (context, data) => data.payload.startsWith("span"),
@@ -143,6 +83,7 @@ const addActions = (dInstance) => {
             }
         }
     );
+    // Tokens, including attempt to add French spaces and half-spaces after punctuation
     dInstance.addAction(
         'token',
         () => true,
@@ -172,24 +113,21 @@ const addActions = (dInstance) => {
             return renderer.appendToTopStackRow(tokenString);
         }
     );
+    // Build the HTML document
     dInstance.addAction(
         'endSequence',
         context => context.sequenceStack[0].type === "main",
-        (renderer, context) => {
-            let chapterLinks = "<span class=\"chapter_link\"><a href=\"../toc.xhtml\">^</a></span>";
-            chapterLinks += context.document.chapters.map(c => ` <span class="chapter_link"><a href="#chapter_${c[0]}">${c[1]}</a></span>`).join("");
+        renderer => {
             let bodyHead = renderer.bodyHead.join("");
             renderer.docSetModel.zip
                 .file(
-                    context.document.headers.bookCode !== "GLO" ?
-                        `OEBPS/XHTML/${context.document.headers.bookCode}/${context.document.headers.bookCode}.xhtml` :
-                        "OEBPS/XHTML/GLO.xhtml",
+                    "OEBPS/XHTML/GLO.xhtml",
                     [
                         `<!DOCTYPE html>\n<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops">\n<head>\n${renderer.head.join("")}\n</head>\n`,
                         '<body id="top">\n',
-                        context.document.chapters.length > 0 ? `<div class="chapter_nav">${chapterLinks}</div>\n` : "",
                         `<header>\n${bodyHead}\n</header>\n`,
                         `<section epub:type="glossary">\n`,
+                        `<h1>${renderer.config.i18n.glossary}</h1>\n`,
                         '<dl>\n',
                         renderer.body.join(""),
                         '</dl>\n',

@@ -49,6 +49,7 @@ class MainEpubDocument extends ScriptureDocument {
 }
 
 const addActions = (dInstance) => {
+    // Initialize headers (not including title) and other state
     dInstance.addAction(
         'startDocument',
         () => true,
@@ -57,6 +58,7 @@ const addActions = (dInstance) => {
             dInstance.head = [
                 '<meta charset=\"utf-8\"/>\n',
                 `<link type="text/css" rel="stylesheet" href="${cssPath}" />\n`,
+                `<title>${context.document.headers.h}</title>`,
             ];
             dInstance.body = [];
             dInstance.bodyHead = [];
@@ -83,11 +85,7 @@ const addActions = (dInstance) => {
             dInstance.context.document.chapters = [];
         }
     );
-    dInstance.addAction(
-        'startSequence',
-        context => context.sequenceStack[0].type === "main",
-        (renderer, context) => renderer.head.push(`<title>${context.document.headers.h || "Vocabulaire"}</title>`),
-    );
+    // Follow some block grafts to secondary content
     dInstance.addAction(
         'blockGraft',
         context => ["title", "heading", "introduction"].includes(context.sequenceStack[0].blockGraft.subType),
@@ -95,11 +93,13 @@ const addActions = (dInstance) => {
             renderer.renderSequenceId(data.payload);
         }
     );
+    // Start new stack row for new block
     dInstance.addAction(
         'startBlock',
         context => true,
         renderer => renderer.pushStackRow(),
     );
+    // Render title block
     dInstance.addAction(
         'endBlock',
         context => context.sequenceStack[0].type === "title",
@@ -110,6 +110,7 @@ const addActions = (dInstance) => {
             renderer.popStackRow();
         },
     );
+    // Render heading block
     dInstance.addAction(
         'endBlock',
         context => context.sequenceStack[0].type === "heading",
@@ -128,10 +129,11 @@ const addActions = (dInstance) => {
             renderer.popStackRow();
         },
     );
+    // add footnote to lookup (apparently handling multi-block footnotes?)
     dInstance.addAction(
         'endBlock',
         context => context.sequenceStack[0].type === "footnote",
-        (renderer, context, data) => {
+        renderer => {
             const footnoteKey = renderer.nextFootnote.toString();
             if (!(footnoteKey in dInstance.footnotes)) {
                 dInstance.footnotes[footnoteKey] = [];
@@ -139,6 +141,7 @@ const addActions = (dInstance) => {
             dInstance.footnotes[footnoteKey] = dInstance.footnotes[footnoteKey].concat(renderer.topStackRow());
         },
     );
+    // Render main or introduction block in a div with class derived from the block scope
     dInstance.addAction(
         'endBlock',
         context => ["main", "introduction"].includes(context.sequenceStack[0].type),
@@ -148,6 +151,7 @@ const addActions = (dInstance) => {
             renderer.popStackRow();
         },
     );
+    // Chapter: maintain state variables, store for rendering by maybeRenderChapter()
     dInstance.addAction(
         'scope',
         (context, data) => data.subType === 'start' && data.payload.startsWith("chapter/"),
@@ -161,6 +165,7 @@ const addActions = (dInstance) => {
             dInstance.chapter.cc++
         },
     );
+    // pubChapter: maintain state variables, store for rendering by maybeRenderChapter()
     dInstance.addAction(
         'scope',
         (context, data) => data.subType === "start" && data.payload.startsWith("pubChapter/"),
@@ -171,6 +176,7 @@ const addActions = (dInstance) => {
             dInstance.chapter.cpc++;
         }
     );
+    // Verses: maintain state variables, store for rendering by maybeRenderVerse()
     dInstance.addAction(
         'scope',
         (context, data) => data.subType === 'start' && data.payload.startsWith("verses/"),
@@ -182,6 +188,7 @@ const addActions = (dInstance) => {
             dInstance.verses.vc++;
         },
     );
+    // pubVerse: maintain state variables, store for rendering by maybeRenderVerse()
     dInstance.addAction(
         'scope',
         (context, data) => data.subType === 'start' && data.payload.startsWith("pubVerse/"),
@@ -192,6 +199,7 @@ const addActions = (dInstance) => {
             dInstance.verses.vc++;
         }
     );
+    // A glossary word lemma: store the lemma for later
     dInstance.addAction(
         'scope',
         (context, data) => data.payload.startsWith("attribute/spanWithAtts/w/lemma"),
@@ -199,6 +207,7 @@ const addActions = (dInstance) => {
             renderer.glossaryLemma = data.payload.split("/")[5];
         }
     );
+    // Character markup - open or close an element
     dInstance.addAction(
         'scope',
         (context, data) => data.payload.startsWith("span") && ["bd", "bk", "dc", "em", "ft", "fq", "fqa", "fr", "fv", "it", "k", "ord", "pn", "qs", "sls", "tl", "wj", "xt"].includes(data.payload.split("/")[1]),
@@ -212,6 +221,7 @@ const addActions = (dInstance) => {
             }
         }
     );
+    // A glossary word: use glossaryLemma to catch lemma after start with a separate action, then use value to produce glossary link
     dInstance.addAction(
         'scope',
         (context, data) => data.payload === "spanWithAtts/w",
@@ -231,6 +241,7 @@ const addActions = (dInstance) => {
             }
         }
     );
+    // Unhandled scope
     dInstance.addAction(
         'scope',
         (context, data) => data.payload.startsWith("span"),
@@ -240,6 +251,7 @@ const addActions = (dInstance) => {
             }
         }
     );
+    // Tokens, including attempt to add French spaces and half-spaces after punctuation
     dInstance.addAction(
         'token',
         () => true,
@@ -273,6 +285,7 @@ const addActions = (dInstance) => {
             return renderer.appendToTopStackRow(tokenString);
         }
     );
+    // Add footnote link, then process the footnote sequence
     dInstance.addAction(
         'inlineGraft',
         (context, data) => data.subType === "footnote",
@@ -282,6 +295,7 @@ const addActions = (dInstance) => {
             renderer.nextFootnote++;
         }
     );
+    // Generate document HTML
     dInstance.addAction(
         'endSequence',
         context => context.sequenceStack[0].type === "main",
@@ -315,6 +329,7 @@ const addActions = (dInstance) => {
                 );
         }
     );
+    // Add hr to separate introduction from main content
     dInstance.addAction(
         'endSequence',
         context => context.sequenceStack[0].type === "introduction",
