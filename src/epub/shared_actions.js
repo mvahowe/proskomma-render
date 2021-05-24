@@ -23,7 +23,11 @@ const sharedActions = {
         (context, data) => data.payload.startsWith("span"),
         (renderer, context, data) => {
             if (data.subType === "start") {
-                renderer.writeLogEntry('Warning', `Unhandled span '${data.payload}'`)
+                renderer.docSetModel.writeLogEntry(
+                    'Warning',
+                    `Unhandled span '${data.payload}'`,
+                    renderer.key,
+                )
             }
         }
     ],

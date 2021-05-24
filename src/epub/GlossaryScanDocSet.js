@@ -24,7 +24,10 @@ const addActions = (dsInstance) => {
             } else {
                 const kContent = renderer.popStackRow().join("").trim();
                 if (kContent in renderer.config.glossaryTerms) {
-                    console.log(`WARNING: k value '${kContent}' used more than once`);
+                    renderer.writeLogEntry(
+                        'WARNING',
+                        `k value '${kContent}' used more than once`,
+                    );
                 } else {
                     renderer.config.glossaryTerms[kContent] = Object.keys(renderer.config.glossaryTerms).length + 1;
                 }

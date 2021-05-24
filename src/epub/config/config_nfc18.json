@@ -4,7 +4,7 @@
   "coverImage": "../../../../../sbf/nfc/cover_ecu.png",
   "language": "fr",
   "uid": "NFC18",
-  "allBooks": [
+  "books": [
     "GEN",
     "EXO",
     "LEV",
@@ -83,7 +83,7 @@
     "REV",
     "GLO"
   ],
-  "books": ["GLO", "MRK", "1JN", "2JN", "3JN", "JUD"],
+  "shortBooks": ["GLO", "MRK", "1JN", "2JN", "3JN", "JUD"],
   "i18n": {
     "notes": "Notes de pied de page",
     "tocBooks": "Table des matières",

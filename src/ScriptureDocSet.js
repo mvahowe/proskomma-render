@@ -31,9 +31,9 @@ class ScriptureDocSet {
         this.key = null;
     }
 
-    writeLogEntry(level, msg) {
+    writeLogEntry(level, msg, component) {
         this.scriptureModel.log.push({
-            component: `docSet${this.key === 'default' ? '' : `:${this.key}`}`,
+            component: component? `${component}/${this.key}` : this.key,
             level,
             msg,
         })
