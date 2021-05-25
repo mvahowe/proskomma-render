@@ -10,7 +10,7 @@
     <manifest>
         <item id="cover-img" href="../OEBPS/IMG/cover.%coverImageSuffix%" media-type="%coverImageMimetype%"/>
         <item id="titlePage" href="../OEBPS/XHTML/title.xhtml" media-type="application/xhtml+xml"/>
-        <item id="toc" href="../OEBPS/XHTML/toc.xhtml" media-type="application/xhtml+xml" properties="nav"/>
+        <item id="toc" href="../OEBPS/toc.xhtml" media-type="application/xhtml+xml" properties="nav"/>
         <item id="css" href="../OEBPS/CSS/styles.css" media-type="text/css" />
         %book_manifest_items%
     </manifest>

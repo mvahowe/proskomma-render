@@ -82,14 +82,14 @@ const addActions = (dsInstance) => {
             let toc = fse.readFileSync(path.resolve(renderer.config.codeRoot, 'resources/toc.xhtml'), 'utf8');
             let tocContent = canonicalBooks
                 .map(
-                    b => `<li><a href="${b}/${b}.xhtml">${renderer.bookTitles[b][2]}</a></li>\n`
+                    b => `<li><a href="XHTML/${b}/${b}.xhtml">${renderer.bookTitles[b][2]}</a></li>\n`
                 );
             if (renderer.config.books.includes("GLO")) {
-                tocContent.push(`<li><a href="GLO.xhtml">${renderer.config.i18n.glossary}</a></li>\n`);
+                tocContent.push(`<li><a href="XHTML/GLO.xhtml">${renderer.config.i18n.glossary}</a></li>\n`);
             }
             toc = toc.replace(/%contentLinks%/g, tocContent.join(""));
             toc = toc.replace(/%toc_books%/g, renderer.config.i18n.tocBooks)
-            renderer.zip.file("OEBPS/XHTML/toc.xhtml", toc);
+            renderer.zip.file("OEBPS/toc.xhtml", toc);
             renderer.zip.generateNodeStream({type: "nodebuffer", streamFiles: true})
                 .pipe(fse.createWriteStream(renderer.config.outputPath));
         }

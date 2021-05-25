@@ -277,7 +277,7 @@ const addActions = (dInstance) => {
         'endSequence',
         context => context.sequenceStack[0].type === "main",
         (renderer, context) => {
-            let chapterLinks = "<span class=\"chapter_link\"><a href=\"../toc.xhtml\">^</a></span>";
+            let chapterLinks = "<span class=\"chapter_link\"><a href=\"../../toc.xhtml\">^</a></span>";
             chapterLinks += context.document.chapters.map(c => ` <span class="chapter_link"><a href="#chapter_${c[0]}">${c[1]}</a></span>`).join("");
             let bodyHead = renderer.bodyHead.join("");
             renderer.docSetModel.zip
