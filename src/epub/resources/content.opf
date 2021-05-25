@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<package xmlns="http://www.idpf.org/2007/opf" version="3.0" xml:lang = "en" dir="ltr" unique-identifier="uid">
+<package xmlns="http://www.idpf.org/2007/opf" version="3.0" xml:lang = "%language%" dir="ltr" unique-identifier="uid">
     <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
         <dc:title id="title">%title%</dc:title>
         <dc:creator>Proskomma ePub Generator</dc:creator>
@@ -8,10 +8,10 @@
         <meta property="dcterms:modified">%timestamp%</meta>
     </metadata>
     <manifest>
-        <item id="cover-img" href="../OEBPS/IMG/cover.%coverImageSuffix%" media-type="%coverImageMimetype%"/>
-        <item id="titlePage" href="../OEBPS/XHTML/title.xhtml" media-type="application/xhtml+xml"/>
-        <item id="toc" href="../OEBPS/toc.xhtml" media-type="application/xhtml+xml" properties="nav"/>
-        <item id="css" href="../OEBPS/CSS/styles.css" media-type="text/css" />
+        <item id="cover-img" href="IMG/cover.%coverImageSuffix%" media-type="%coverImageMimetype%"/>
+        <item id="titlePage" href="XHTML/title.xhtml" media-type="application/xhtml+xml"/>
+        <item id="toc" href="toc.xhtml" media-type="application/xhtml+xml" properties="nav"/>
+        <item id="css" href="CSS/styles.css" media-type="text/css" />
         %book_manifest_items%
     </manifest>
     <spine>

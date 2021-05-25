@@ -137,7 +137,7 @@ const addActions = (dInstance) => {
                                 }
                                 return -1;
                             })
-                            .map(as => `<aside epub:type="footnote" class="" id="glo_${as.n}">\n<h4>${as.terms.join(', ')}</h4>\n${as.content.map(asl => `<p>${asl}</p>\n`).join('')}</aside>\n`).join(''),
+                            .map(as => `<aside epub:type="footnote" id="glo_${as.n}">\n<h4>${as.terms.join(', ')}</h4>\n${as.content.map(asl => `<p>${asl}</p>\n`).join('')}</aside>\n`).join(''),
                             `</section>\n`,
                         '</body>\n</html>\n'
                     ].join("")

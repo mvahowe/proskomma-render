@@ -291,16 +291,20 @@ const addActions = (dInstance) => {
                         `<section epub:type="bodymatter">\n`,
                         renderer.body.join(""),
                         `\n</section>\n`,
+                        /*
                         Object.keys(renderer.footnotes).length > 0 ?
                             `<section epub:type="footnotes">\n<h2 class="notes_title">${renderer.config.i18n.notes}</h2>\n` :
                             "",
+                         */
                         Object.entries(renderer.footnotes)
                             .map(fe =>
-                                `<aside epub:type="footnote">\n<p><a id="footnote_${fe[0]}" href="#footnote_anchor_${fe[0]}" class="footnote_number">${fe[0]}</a>&#160;: ${fe[1].join("")}</p></aside>\n`)
+                                `<aside epub:type="footnote" id="footnote_${fe[0]}" class="footnote_number"><p>${fe[1].join("")}</p></aside>\n`)
                             .join(""),
+                        /*
                         Object.keys(renderer.footnotes).length > 0 ?
                             `</section>\n` :
                             "",
+                         */
                         '</body>\n</html>\n'
                     ].join("")
                 );

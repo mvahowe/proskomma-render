@@ -63,13 +63,13 @@ const addActions = (dsInstance) => {
             let spineContent = canonicalBooks.map(b => `<itemref idref="body_${b}" />\n`).join("");
             if (renderer.config.books.includes("GLO")) {
                 spineContent = spineContent.concat(`<itemref idref="body_GLO" />\n`);
-                spineContent = spineContent.concat(`<itemref idref="body_glossary_notes" />\n`);
+                spineContent = spineContent.concat(`<itemref idref="body_glossary_notes" linear="no" />\n`);
             }
             opf = opf.replace(/%spine%/g, spineContent);
-            let manifestContent = canonicalBooks.map(b => `<item id="body_${b}" href="../OEBPS/XHTML/${b}/${b}.xhtml" media-type="application/xhtml+xml" />`).join("");
+            let manifestContent = canonicalBooks.map(b => `<item id="body_${b}" href="XHTML/${b}/${b}.xhtml" media-type="application/xhtml+xml" />`).join("");
             if (renderer.config.books.includes("GLO")) {
-                manifestContent = manifestContent.concat(`<item id="body_GLO" href="../OEBPS/XHTML/GLO.xhtml" media-type="application/xhtml+xml" />`);
-                manifestContent = manifestContent.concat(`<item id="body_glossary_notes" href="../OEBPS/XHTML/glossary_notes.xhtml" media-type="application/xhtml+xml" />`);
+                manifestContent = manifestContent.concat(`<item id="body_GLO" href="XHTML/GLO.xhtml" media-type="application/xhtml+xml" />`);
+                manifestContent = manifestContent.concat(`<item id="body_glossary_notes" href="XHTML/glossary_notes.xhtml" media-type="application/xhtml+xml" />`);
             }
             opf = opf.replace(/%book_manifest_items%/g, manifestContent);
             renderer.zip.file("OEBPS/content.opf", opf);
