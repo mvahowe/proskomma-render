@@ -87,6 +87,12 @@ const addActions = (dInstance) => {
     );
     // Character markup
     dInstance.addAction(...sharedActions.characterScope);
+    // Ignore \w
+    dInstance.addAction(
+        'scope',
+        (context, data) => data.payload === "spanWithAtts/w",
+        () => {}
+    );
     // Unhandled scope
     dInstance.addAction(...sharedActions.unhandledScope);
     // Tokens, including attempt to add French spaces and half-spaces after punctuation

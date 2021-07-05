@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+    <meta charset="UTF-8"/>
     <title>%titlePage%</title>
     <script src="https://unpkg.com/pagedjs/dist/paged.polyfill.js"></script>
     <style>
@@ -21,6 +22,40 @@
             @bottom-center {
                 content: counter(page);
             }
+
+            @top-center {
+                content: element(heading);
+            }
+
+            @top-right {
+                content: element(chapN);
+            }
+        }
+
+        #toc_ul li {
+            list-style-type: none;
+        }
+
+        #toc_ul li a {
+            text-decoration: none;
+            color: #000;
+        }
+
+        #toc_ul li a::after {
+            content: target-counter(attr(href url), page, decimal);
+            float: right;
+        }
+
+        p.runningHeader {
+            position: running(heading);
+            font-style: italic;
+            font-size: 8pt;
+        }
+
+        p.chapN {
+            position: running(chapN);
+            font-style: italic;
+            font-size: 8pt;
         }
 
         span.footnote {float: footnote; }

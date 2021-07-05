@@ -33,6 +33,7 @@ class CanonicalDocument extends ScriptureDocument {
             }
             this.context.document.chapters.push([chapterId, chapterLabel]);
             this.body.push(`<h3 class="chapter">${chapterLabel}</h3>\n`);
+            this.body.push(`<p class="chapN">Chapter ${chapterLabel}</p>\n`);
             this.chapter.waiting = false;
         }
     }
@@ -245,6 +246,8 @@ const addActions = (dInstance) => {
             renderer.config.bookOutput[context.document.headers.bookCode] =
                 [
                     '<div class="bibleBook">\n',
+                    `<a id="title_${context.document.headers.bookCode}"/>\n`,
+                    `<p class="runningHeader">${context.document.headers.toc}</p>\n`,
                     `<header>\n${bodyHead}\n</header>\n`,
                     '<div class="bibleBookBody">\n',
                     renderer.body.join(""),

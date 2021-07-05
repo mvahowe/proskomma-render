@@ -27,10 +27,12 @@ nav ol li a {text-decoration: none}
 .q3 {padding-left: 3.5em}
 .q4 {padding-left: 4.5em}
 
+.add {font-style: italic}
 .bd {font-weight: bold}
 .bk {font-style: italic}
 .dc {}
 .em {font-style: italic}
+.fdc {font-style: italic}
 .fq {font-style: italic}
 .fqa {font-style: italic}
 .fr {font-weight: bold; font-size: small}
@@ -43,6 +45,7 @@ nav ol li a {text-decoration: none}
 .qs {font-style: italic; float: right; padding-left: 1em}
 .sls {font-style: italic}
 .tl {font-style: italic}
+.w {}
 .wj {color: #600}
 .xt {font-weight: bold}
 

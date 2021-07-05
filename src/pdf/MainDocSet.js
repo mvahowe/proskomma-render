@@ -39,7 +39,7 @@ const addActions = (dsInstance) => {
             let toc = fse.readFileSync(path.resolve(renderer.config.codeRoot, 'resources/toc.xhtml'), 'utf8');
             let tocContent = canonicalBooks
                 .map(
-                    b => `<li>${renderer.bookTitles[b][2]}</li>\n`
+                    b => `<li><a href="#title_${b}">${renderer.bookTitles[b][2]}</a></li>\n`
                 );
             toc = toc.replace(/%contentLinks%/g, tocContent.join(""));
             toc = toc.replace(/%toc_books%/g, renderer.config.i18n.tocBooks);
