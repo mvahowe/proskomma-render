@@ -10,8 +10,17 @@ const MainDocSet = require('./MainDocSet');
 const ScriptureParaModel = require('../ScriptureParaModel');
 
 const bookMatches = str => {
-    for (const book of config.books) {
+    for (const book of config.bookSources) {
         if (str.includes(book) || str.includes(book.toLowerCase())) {
+            return true;
+        }
+    }
+    return false;
+}
+
+const peripheralMatches = str => {
+    for (const periph of config.peripheralSources) {
+        if (str.includes(periph) || str.includes(periph.toLowerCase())) {
             return true;
         }
     }
@@ -46,6 +55,10 @@ const doRender = async (pk, config) => {
         .then(thenFunction)
 };
 
+if (process.argv.length !== 4) {
+    console.log("USAGE: node make_epub.js <config_path> <output_path>");
+    process.exit(1);
+}
 const configPath = path.resolve(__dirname, process.argv[2]);
 const config = fse.readJsonSync(configPath);
 config.codeRoot = __dirname;
@@ -57,14 +70,15 @@ if (!config.outputPath) {
 
 let ts = Date.now();
 let nBooks = 0;
+let nPeriphs = 0;
 
 const pk = new Proskomma();
 const fqSourceDir = path.resolve(config.configRoot, config.sourceDir);
 for (const filePath of fse.readdirSync(fqSourceDir)) {
     if (bookMatches(filePath)) {
-        console.log(`   ${filePath}`);
+        console.log(`   Book ${filePath}`);
         nBooks++;
-        const content = fse.readFileSync(path.join(fqSourceDir, filePath));
+        let content = fse.readFileSync(path.join(fqSourceDir, filePath));
         const contentType = filePath.split('.').pop();
         pk.importDocument(
             {lang: "xxx", abbr: "yyy"},
@@ -72,9 +86,18 @@ for (const filePath of fse.readdirSync(fqSourceDir)) {
             content,
             {}
         );
+    } else if (peripheralMatches(filePath)) {
+        console.log(`   Peripheral ${filePath}`);
+        nPeriphs++;
+        let content = fse.readFileSync(path.join(fqSourceDir, filePath));
+        pk.importUsfmPeriph(
+            { lang: 'xxx', abbr: 'yyy' },
+            content,
+            {},
+        );
     }
 }
-console.log(`${nBooks} book(s) loaded in ${(Date.now() - ts) / 1000} sec`);
+console.log(`${nBooks} book(s) and ${nPeriphs} peripheral file(s) loaded in ${(Date.now() - ts) / 1000} sec`);
 ts = Date.now();
 
 doRender(pk, config).then(() => {

@@ -5,6 +5,7 @@ const JSZip = require('jszip');
 const ScriptureDocSet = require('../ScriptureDocSet');
 const MainEpubDocument = require('./CanonicalDocument');
 const GlossaryEpubDocument = require('./GlossaryDocument');
+const PeripheralEpubDocument = require('./PeripheralDocument');
 
 class MainDocSet extends ScriptureDocSet {
 
@@ -20,6 +21,8 @@ class MainDocSet extends ScriptureDocSet {
         const bookCode = document.headers.filter(h => h.key === 'bookCode')[0];
         if (bookCode && bookCode.value === 'GLO') {
             return 'glossary';
+        } else if (bookCode && bookCode.value.startsWith('P')) {
+            return 'peripheral';
         } else {
             return 'default';
         }
@@ -29,8 +32,10 @@ class MainDocSet extends ScriptureDocSet {
 const addActions = (dsInstance) => {
     const dInstance = new MainEpubDocument(dsInstance.result, dsInstance.context, dsInstance.config);
     const gDInstance = new GlossaryEpubDocument(dsInstance.result, dsInstance.context, dsInstance.config);
+    const pDInstance = new PeripheralEpubDocument(dsInstance.result, dsInstance.context, dsInstance.config);
     dsInstance.addDocumentModel('default', dInstance);
     dsInstance.addDocumentModel('glossary', gDInstance);
+    dsInstance.addDocumentModel('peripheral', pDInstance);
     dsInstance.addAction(
         'startDocSet',
         () => true,
@@ -52,7 +57,7 @@ const addActions = (dsInstance) => {
         'endDocSet',
         () => true,
         (renderer) => {
-            const canonicalBooks = renderer.config.books.filter(b => b in renderer.bookTitles);
+            const canonicalBooks = renderer.config.bookSources.filter(b => b in renderer.bookTitles);
             let opf = fse.readFileSync(path.resolve(renderer.config.codeRoot, 'resources/content.opf'), 'utf8');
             opf = opf.replace(/%title%/g, renderer.config.title);
             opf = opf.replace(/%uid%/g, renderer.config.uid);
@@ -61,13 +66,13 @@ const addActions = (dsInstance) => {
             opf = opf.replace(/%coverImageSuffix%/g, renderer.config.coverImageSuffix);
             opf = opf.replace(/%coverImageMimetype%/g, renderer.config.coverImageSuffix === "png" ? "image/png" : "image/jpeg");
             let spineContent = canonicalBooks.map(b => `<itemref idref="body_${b}" />\n`).join("");
-            if (renderer.config.books.includes("GLO")) {
+            if (renderer.config.bookSources.includes("GLO")) {
                 spineContent = spineContent.concat(`<itemref idref="body_GLO" />\n`);
                 spineContent = spineContent.concat(`<itemref idref="body_glossary_notes" linear="no" />\n`);
             }
             opf = opf.replace(/%spine%/g, spineContent);
             let manifestContent = canonicalBooks.map(b => `<item id="body_${b}" href="XHTML/${b}/${b}.xhtml" media-type="application/xhtml+xml" />`).join("");
-            if (renderer.config.books.includes("GLO")) {
+            if (renderer.config.bookSources.includes("GLO")) {
                 manifestContent = manifestContent.concat(`<item id="body_GLO" href="XHTML/GLO.xhtml" media-type="application/xhtml+xml" />`);
                 manifestContent = manifestContent.concat(`<item id="body_glossary_notes" href="XHTML/glossary_notes.xhtml" media-type="application/xhtml+xml" />`);
             }
@@ -84,7 +89,7 @@ const addActions = (dsInstance) => {
                 .map(
                     b => `<li><a href="XHTML/${b}/${b}.xhtml">${renderer.bookTitles[b][2]}</a></li>\n`
                 );
-            if (renderer.config.books.includes("GLO")) {
+            if (renderer.config.bookSources.includes("GLO")) {
                 tocContent.push(`<li><a href="XHTML/GLO.xhtml">${renderer.config.i18n.glossary}</a></li>\n`);
             }
             toc = toc.replace(/%contentLinks%/g, tocContent.join(""));
