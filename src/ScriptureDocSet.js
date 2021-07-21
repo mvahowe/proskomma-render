@@ -71,10 +71,15 @@ class ScriptureDocSet {
         for (const action of Object.keys(this.classActions)) {
             this.allActions[action] = (renderSpec.actions[action] || []).concat(this.classActions[action]);
         }
+        const peripherals = {};
+        for (const p of docSet.documents.filter(d => d.idParts.type === 'periph')) {
+            peripherals[p.idParts.parts[2]] = p.idParts.parts[0];
+        }
         this.context.docSet = {
             id: docSet.id,
             selectors: {},
-            tags: docSet.tags
+            tags: docSet.tags,
+            peripherals,
         }
         for (const selector of docSet.selectors) {
             this.context.docSet.selectors[selector.key] = selector.value;

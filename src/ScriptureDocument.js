@@ -61,6 +61,8 @@ class ScriptureDocument {
         }
         this.context.document = {
             id: document.id,
+            idType: document.idParts.type,
+            idParts: document.idParts.parts,
             headers: {},
             tags: document.tags
         };

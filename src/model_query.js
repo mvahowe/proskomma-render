@@ -8,6 +8,7 @@ const doModelQuery = async pk => {
         '    documents {' +
         '      id' +
         '      headers { key value }' +
+        '      idParts { type parts }' +
         '      tags' +
         '      sequences {' +
         '        id' +

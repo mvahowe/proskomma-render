@@ -18,6 +18,8 @@ nav ol li a {text-decoration: none}
 .r {font-weight: normal; font-style: italic; margin-top: 0}
 .is, .s {}
 .is2, .s2 {}
+.sc {}
+.qt {font-style: italic}
 
 .ili, .ip, .m, .p, .q, .q2, .q3, .q4 {margin-bottom: 0.4em; margin-top: 0.4em}
 .ili {padding-left: 1.5em}
