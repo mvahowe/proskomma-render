@@ -262,16 +262,16 @@ const addActions = (dInstance) => {
             return renderer.appendToTopStackRow(tokenString);
         }
     ),
-    // Add footnote link, then process the footnote sequence
-    dInstance.addAction(
-        'inlineGraft',
-        (context, data) => data.subType === "footnote",
-        (renderer, context, data) => {
-            renderer.appendToTopStackRow(`<a epub:type="noteref" id="footnote_anchor_${renderer.nextFootnote}" href="#footnote_${renderer.nextFootnote}" class="footnote_anchor"><sup>${renderer.nextFootnote}</sup></a>`);
-            renderer.renderSequenceId(data.payload);
-            renderer.nextFootnote++;
-        }
-    );
+        // Add footnote link, then process the footnote sequence
+        dInstance.addAction(
+            'inlineGraft',
+            (context, data) => data.subType === "footnote",
+            (renderer, context, data) => {
+                renderer.appendToTopStackRow(`<a epub:type="noteref" id="footnote_anchor_${renderer.nextFootnote}" href="#footnote_${renderer.nextFootnote}" class="footnote_anchor"><sup>${renderer.nextFootnote}</sup></a>`);
+                renderer.renderSequenceId(data.payload);
+                renderer.nextFootnote++;
+            }
+        );
     // Generate document HTML
     dInstance.addAction(
         'endSequence',

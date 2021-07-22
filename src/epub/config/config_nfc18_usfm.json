@@ -89,8 +89,20 @@
   ],
   "structure": [
     [
-      "bookCode",
-      "FRT"
+      "periph",
+      "pubdata"
+    ],
+    [
+      "periph",
+      "foreword"
+    ],
+    [
+      "periph",
+      "abbreviations"
+    ],
+    [
+      "periph",
+      "preface"
     ],
     [
       "periph",
